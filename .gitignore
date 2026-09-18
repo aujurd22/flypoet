@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pt
+*.bin
+*.gz
+*.egg-info/
+.venv/
+.pytest_cache/
+data/logs/
+*.log
+data/luxun-master/
