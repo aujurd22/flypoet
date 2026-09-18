@@ -1,0 +1,3 @@
+[flynetS_adaptive] 92.6M params | bf16 | RoPE+RMSNorm+SwiGLU+SDPA
+    val=6.8349 erank=3 d3=0.78
+[flynetS_adaptive] DONE

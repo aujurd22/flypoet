@@ -1,0 +1,136 @@
+.F                                                                       [100%]
+================================== FAILURES ===================================
+________________ TestKWTA.test_sparsity_exactly_ten_pct[cuda] _________________
+
+self = <test_corpus.TestKWTA object at 0x0000017C6F39FD90>, impl = 'cuda'
+
+    @pytest.mark.parametrize("impl", ["torch", "cuda"])
+    def test_sparsity_exactly_ten_pct(self, impl):
+        if impl == "cuda":
+>           pytest.importorskip("adaptive_kwta")
+
+tests\test_corpus.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+<frozen importlib._bootstrap_external>:1026: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+adaptive_kwta.py:101: in <module>
+    mod = load_inline(
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension.py:1994: in load_inline
+    return _jit_compile(
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension.py:2076: in _jit_compile
+    _write_ninja_file_and_build_library(
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension.py:2207: in _write_ninja_file_and_build_library
+    _write_ninja_file_to_build_library(
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension.py:2612: in _write_ninja_file_to_build_library
+    cuda_flags = common_cflags + COMMON_NVCC_FLAGS + _get_cuda_arch_flags()
+                                                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cflags = None
+
+    def _get_cuda_arch_flags(cflags: Optional[list[str]] = None) -> list[str]:
+        """
+        Determine CUDA arch flags to use.
+    
+        For an arch, say "6.1", the added compile flag will be
+        ``-gencode=arch=compute_61,code=sm_61``.
+        For an added "+PTX", an additional
+        ``-gencode=arch=compute_xx,code=compute_xx`` is added.
+    
+        See select_compute_arch.cmake for corresponding named and supported arches
+        when building with CMake.
+        """
+        # If cflags is given, there may already be user-provided arch flags in it
+        # (from `extra_compile_args`)
+        if cflags is not None:
+            for flag in cflags:
+                if 'TORCH_EXTENSION_NAME' in flag:
+                    continue
+                if 'arch' in flag:
+                    return []
+    
+        # Note: keep combined names ("arch1+arch2") above single names, otherwise
+        # string replacement may not do the right thing
+        named_arches = collections.OrderedDict([
+            ('Kepler+Tesla', '3.7'),
+            ('Kepler', '3.5+PTX'),
+            ('Maxwell+Tegra', '5.3'),
+            ('Maxwell', '5.0;5.2+PTX'),
+            ('Pascal', '6.0;6.1+PTX'),
+            ('Volta+Tegra', '7.2'),
+            ('Volta', '7.0+PTX'),
+            ('Turing', '7.5+PTX'),
+            ('Ampere+Tegra', '8.7'),
+            ('Ampere', '8.0;8.6+PTX'),
+            ('Ada', '8.9+PTX'),
+            ('Hopper', '9.0+PTX'),
+            ('Blackwell+Tegra', '10.1'),
+            ('Blackwell', '10.0;12.0+PTX'),
+        ])
+    
+        supported_arches = ['3.5', '3.7', '5.0', '5.2', '5.3', '6.0', '6.1', '6.2',
+                            '7.0', '7.2', '7.5', '8.0', '8.6', '8.7', '8.9', '9.0', '9.0a',
+                            '10.0', '10.0a', '10.1', '10.1a', '12.0', '12.0a']
+        valid_arch_strings = supported_arches + [s + "+PTX" for s in supported_arches]
+    
+        # The default is sm_30 for CUDA 9.x and 10.x
+        # First check for an env var (same as used by the main setup.py)
+        # Can be one or more architectures, e.g. "6.1" or "3.5;5.2;6.0;6.1;7.0+PTX"
+        # See cmake/Modules_CUDA_fix/upstream/FindCUDA/select_compute_arch.cmake
+        _arch_list = os.environ.get('TORCH_CUDA_ARCH_LIST', None)
+    
+        # If not given, determine what's best for the GPU / CUDA version that can be found
+        if not _arch_list:
+            warnings.warn(
+                "TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation. \n"
+                "If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST'].")
+            arch_list = []
+            # the assumption is that the extension should run on any of the currently visible cards,
+            # which could be of different types - therefore all archs for visible cards should be included
+            for i in range(torch.cuda.device_count()):
+                capability = torch.cuda.get_device_capability(i)
+                supported_sm = [int("".join(re.findall(r"\d+", arch.split('_')[1])))
+                                for arch in torch.cuda.get_arch_list() if 'sm_' in arch]
+                max_supported_sm = max((sm // 10, sm % 10) for sm in supported_sm)
+                # Capability of the device may be higher than what's supported by the user's
+                # NVCC, causing compilation error. User's NVCC is expected to match the one
+                # used to build pytorch, so we use the maximum supported capability of pytorch
+                # to clamp the capability.
+                capability = min(max_supported_sm, capability)
+                arch = f'{capability[0]}.{capability[1]}'
+                if arch not in arch_list:
+                    arch_list.append(arch)
+            arch_list = sorted(arch_list)
+            arch_list[-1] += '+PTX'
+        else:
+            # Deal with lists that are ' ' separated (only deal with ';' after)
+            _arch_list = _arch_list.replace(' ', ';')
+            # Expand named arches
+            for named_arch, archval in named_arches.items():
+                _arch_list = _arch_list.replace(named_arch, archval)
+    
+            arch_list = _arch_list.split(';')
+    
+        flags = []
+        for arch in arch_list:
+            if arch not in valid_arch_strings:
+>               raise ValueError(f"Unknown CUDA arch ({arch}) or GPU not supported")
+E               ValueError: Unknown CUDA arch () or GPU not supported
+
+C:\Users\user\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension.py:2389: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_corpus.py::TestKWTA::test_sparsity_exactly_ten_pct[cuda] - ...
+1 failed, 1 passed in 2.53s

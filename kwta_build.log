@@ -1,0 +1,3 @@
+retained: adaptive=180063, exact=155648, overlap=155647 (86.4%)
+values equal where both kept: True
+adaptive CUDA: 0.037 ms | kthvalue fused: 0.307 ms | torch.topk: 0.488 ms

@@ -1,0 +1,2 @@
+D:\user\flypoet\multi_seed_calib.py:12: SyntaxWarning: invalid escape sequence '\V'
+  pre = ("call \"D:\vs-install\vs\VC\Auxiliary\Build\vcvars64.bat\" >nul 2>&1 && ") if arm == "flynetS_adaptive" else ""

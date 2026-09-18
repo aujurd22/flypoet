@@ -1,0 +1,13 @@
+std seed1: acc=0.080 ECE=0.0997 Brier=0.0809
+std seed2: acc=0.095 ECE=0.0931 Brier=0.0877
+std seed3: acc=0.090 ECE=0.0905 Brier=0.0930
+flynetS seed1: acc=0.343 ECE=0.0553 Brier=0.1258
+flynetS seed2: acc=0.312 ECE=0.0511 Brier=0.1270
+flynetS seed3: acc=0.345 ECE=0.0417 Brier=0.1299
+flynetS_adaptive seed1 FAIL: [Errno 2] No such file or directory: 'D:\\user\\flypoet\\logs_v2\\calibration_flynetS_adaptive_seed1.json'
+flynetS_adaptive seed2 FAIL: [Errno 2] No such file or directory: 'D:\\user\\flypoet\\logs_v2\\calibration_flynetS_adaptive_seed2.json'
+flynetS_adaptive seed3 FAIL: [Errno 2] No such file or directory: 'D:\\user\\flypoet\\logs_v2\\calibration_flynetS_adaptive_seed3.json'
+
+=== 跨 seed 汇总 ===
+[std] acc=0.088±0.006 | ECE=0.0944±0.0039 | Brier=0.0872±0.0049 | gap=+0.093±0.005
+[flynetS] acc=0.333±0.015 | ECE=0.0494±0.0057 | Brier=0.1276±0.0017 | gap=-0.010±0.018

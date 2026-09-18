@@ -1,0 +1,10 @@
+[21:53:27] files to fetch: ['config.json', 'configuration.json', 'generation_config.json', 'merges.txt', 'model.safetensors', 'tokenizer.json', 'tokenizer_config.json', 'vocab.json']
+[21:53:28] done config.json 0.0MB in 0s
+[21:53:28] done configuration.json 0.0MB in 0s
+[21:53:28] done generation_config.json 0.0MB in 0s
+[21:53:29] done merges.txt 1.7MB in 1s
+[21:54:17] done model.safetensors 1192.1MB in 48s
+[21:54:18] done tokenizer.json 7.0MB in 1s
+[21:54:18] done tokenizer_config.json 0.0MB in 0s
+[21:54:19] done vocab.json 2.8MB in 1s
+[21:54:19] QWEN06 DOWNLOAD DONE

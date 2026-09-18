@@ -1,0 +1,1 @@
+[flynetS] 92.6M params | bf16 | RoPE+RMSNorm+SwiGLU+SDPA

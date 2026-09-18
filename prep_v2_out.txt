@@ -1,0 +1,6 @@
+poetry docs: 315635, 23.3 chars
+luxun chunks: 623
+c4 shard chinese-c4-0021-: cumulative 22.1M chars
+c4 shard chinese-c4-0031-: cumulative 30.0M chars
+total docs: 352614
+train 53.0M | val 1.64M | vocab 10002

@@ -1,0 +1,4 @@
+scanned 20000, got 7.1M chars, 15s
+scanned 25000, got 8.9M chars, 20s
+scanned 70000, got 25.0M chars, 46s
+DONE: 25.0M chars from 70044 rows, 46s

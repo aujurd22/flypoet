@@ -1,0 +1,1 @@
+C:\Users\user\AppData\Local\Programs\Python\Python313\python.exe: can't open file 'D:\\user\\flypoet\\qwen06_download.py': [Errno 2] No such file or directory
