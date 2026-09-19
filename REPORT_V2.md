@@ -100,7 +100,7 @@ val 对半分为 calib/test，LBFGS 拟合 T：
 - 神经科学动机：蕈状体 KC winnow / Krotov-Hopfield 胜者全取；自适应阈值即其在线阈值学习版本
   （CUDA kernel 21× 快于 torch.topk，见 adaptive_kwta.py 基准）。
 
-## 八、事故与修复（全程诚实记录）
+## 八、事故与修复
 
 | 事故 | 根因 | 修复 |
 |---|---|---|
