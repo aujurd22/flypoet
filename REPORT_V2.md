@@ -111,7 +111,24 @@ val 对半分为 calib/test，LBFGS 拟合 T：
 | adaptive 反向 mask 失真 | y!=0 重构 mask | 显式 bool mask 保存/恢复 |
 | 报告被生成脚本覆盖 | make_report_v2.py 全量覆写 | 本文件改为手工维护 |
 
-## 九、产物清单
+## 九、稀疏度扫描（k_frac sweep，12k 步）
+
+固定其余超参，只扫 k-WTA 保留比例（k = int(768·k_frac) 通道/层）。单 seed，12k 终点 val：
+
+| k_frac | 活跃通道/层 | val@12k | vs dense | 备注 |
+|---|---|---|---|---|
+| 0.02 | 15 | 4.156 | +0.250 | 过稀伤学习（4k 时已落后 0.30） |
+| 0.10 | 77 | 3.889 | −0.017 | 原始设置 |
+| **0.25** | **192** | **3.827** | **−0.079** | **全臂最优，含 dense** |
+| 1.00 (dense) | 768 | 3.906 | — | std |
+
+**发现**：甜点不在当初拍脑袋的 10%，而在 **25% 附近**——适度稀疏（每层关 3/4 通道）
+优于 dense 约 0.08 nats，且 4k 起每个检查点都领先；过稀（2%）则明显受损。
+"存在中间甜区"本身比具体数值更重要：k-WTA 的收益是 U 形的，不是单调的。
+注意事项：单 seed、仅 12k、仅本架构；稀疏臂 tps 略低于 dense（37.5–36.7k vs 40.4k，
+kthvalue 开销），PPL 优势尚未折算成 wall-clock 优势。
+
+## 十、产物清单
 
 训练：train_v2.py / adaptive_kwta.py / rerun_adaptive24k.bat / overnight_runner.py
 评估：calibration_eval.py / multi_seed_calib.py / compare_calibration.py
