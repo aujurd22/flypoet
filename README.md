@@ -20,7 +20,7 @@ At 24k steps std caught up. The claim that survives: **k-WTA speeds up convergen
 
 One negative result: a k-WTA probe on frozen Qwen3-0.6B features does *worse* than a linear probe (0.570 vs 0.642). The mechanism has to be grown into training from the start; bolting it on afterwards doesn't help.
 
-A first sparsity sweep (12k steps) found the sweet spot is not 10%: keeping 25% of channels beats both dense (3.827 vs 3.906 val) and 10% (3.889), while 2% clearly hurts (4.156). Moderate sparsity helps; too much hurts — the gain is U-shaped.
+A first sparsity sweep (7 points, 12k steps) mapped the gain as U-shaped: the sweet spot is near 25% of channels kept (3.827 val vs 3.906 dense), 40–60% still beats dense, and 2% clearly hurts (4.156). Extending the 25% arm to 24k keeps it ahead of dense, though the lead narrows from 0.079 to 0.038 nats — partly convergence speedup, partly a persistent edge.
 
 Full numbers, pre-registered judgment criteria, and the mistakes made along the way are in [REPORT_V2.md](REPORT_V2.md). Methodology notes are in [NOTES_RLCD.md](NOTES_RLCD.md) (T59e, RLCD, etc. are internal experiment codenames).
 

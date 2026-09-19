@@ -1,0 +1,12 @@
+{"step": 2000, "val": 4.7098, "erank": 63.9, "distinct3": 0.742}
+{"step": 4000, "val": 4.316, "erank": 75.2, "distinct3": 0.681}
+{"step": 6000, "val": 4.1503, "erank": 76.6, "distinct3": 0.769}
+{"step": 8000, "val": 4.0696, "erank": 73.7, "distinct3": 0.725}
+{"step": 10000, "val": 3.8952, "erank": 76.9, "distinct3": 0.82}
+{"step": 12000, "val": 3.853, "erank": 84.2, "distinct3": 0.841}
+{"step": 14000, "val": 3.7262, "erank": 75.4, "distinct3": 0.764}
+{"step": 16000, "val": 3.6766, "erank": 92.0, "distinct3": 0.769}
+{"step": 18000, "val": 3.6504, "erank": 89.4, "distinct3": 0.738}
+{"step": 20000, "val": 3.5692, "erank": 93.1, "distinct3": 0.721}
+{"step": 22000, "val": 3.5844, "erank": 81.2, "distinct3": 0.747}
+{"step": 24000, "val": 3.6351, "erank": 81.9, "distinct3": 0.734}

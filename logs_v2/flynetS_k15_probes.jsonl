@@ -1,0 +1,6 @@
+{"step": 2000, "val": 4.6853, "erank": 67.9, "distinct3": 0.829}
+{"step": 4000, "val": 4.3198, "erank": 76.9, "distinct3": 0.742}
+{"step": 6000, "val": 4.1518, "erank": 78.8, "distinct3": 0.731}
+{"step": 8000, "val": 4.0363, "erank": 75.9, "distinct3": 0.71}
+{"step": 10000, "val": 3.8575, "erank": 79.9, "distinct3": 0.806}
+{"step": 12000, "val": 3.8596, "erank": 85.3, "distinct3": 0.738}
