@@ -1,0 +1,205 @@
+"""Experiment 1: fly-style surprise-gated continual learning.
+
+Fly story: mushroom-body memory writes are gated by dopaminergic prediction
+error — no surprise, no write — and memories live in separate compartments.
+ML test: sequentially fine-tune a pretrained trunk on 4 domains and measure
+catastrophic forgetting of earlier domains.
+
+Arms (all fine-tune the same std-24k checkpoint, same LR/steps/data order):
+  ft    plain sequential fine-tune                      (baseline forgetting)
+  comp  per-domain compartment masks: each domain may
+        update only a fixed random 30% of weight elements (re-sampled per
+        domain, like KC compartments)
+  fly   comp + surprise gate: take an optimizer step only when the batch
+        loss exceeds the running noise floor (mu + 0.25*sigma, EMA-updated)
+        — "no surprise, no write"
+
+Protocol: domain sequence news -> dialogue -> law -> technology, 1500 steps
+each. After every stage, eval val loss on ALL domains seen so far (seeded
+window sampling for comparability). Forgetting_j = loss_j(just after stage j)
+- loss_j(final).
+"""
+import json, os, sys, time
+import numpy as np
+import torch
+import torch.nn.functional as F
+
+sys.path.insert(0, r"D:\user\flypoet")
+import train_v2 as T
+
+DEV = "cuda"
+SEQ = 192
+BATCH = 24
+STEPS = 1500
+LR = 1e-4
+DOMAINS = ["news", "dialogue", "law", "technology"]
+D2I = {"general": 0, "news": 1, "encyclopedia": 2, "technology": 3, "law": 4,
+       "education": 5, "dialogue": 6, "finance": 7}
+COMP_FRAC = 0.30
+GATE_K = 0.25          # step only when loss > mu + K*sigma
+
+
+def load_rows(split):
+    rows = []
+    with open(rf"D:\user\flypoet\decide_data\{split}.jsonl", encoding="utf-8") as f:
+        for line in f:
+            d = json.loads(line)
+            rows.append((d["ids"], d["label"]))
+    return rows
+
+
+def domain_stream(rows, label, stoi):
+    sep = stoi.get("\n", 1)
+    arr = []
+    for ids, lab in rows:
+        if lab == label:
+            arr.extend(ids[:200])
+            arr.append(sep)
+    return np.array(arr, dtype=np.int64)
+
+
+def batches(arr, batch, seed=None):
+    if seed is not None:
+        torch.manual_seed(seed)
+    ix = torch.randint(len(arr) - SEQ - 1, (batch,))
+    x = torch.stack([torch.from_numpy(arr[i:i + SEQ]) for i in ix])
+    y = torch.stack([torch.from_numpy(arr[i + 1:i + 1 + SEQ]) for i in ix])
+    return x.to(DEV), y.to(DEV)
+
+
+@torch.no_grad()
+def eval_domain(model, arr, n_batches=20):
+    model.eval()
+    ls = []
+    for b in range(n_batches):
+        x, y = batches(arr, 16, seed=777 + b)
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            _, l = model(x, y)
+        ls.append(l.item())
+    model.train()
+    return float(np.mean(ls))
+
+
+def comp_masks(model, domain_idx, frac=COMP_FRAC):
+    """Element-wise Bernoulli(frac) keep-mask per 2D weight. Tied emb/head
+    counted once. LN gains and any bias stay trainable."""
+    g = torch.Generator(device=DEV).manual_seed(1000 + domain_idx)
+    masks, seen = {}, set()
+    for name, p in model.named_parameters():
+        if p.ndim != 2 or id(p) in seen:
+            continue
+        seen.add(id(p))
+        masks[name] = (torch.rand(p.shape, generator=g, device=DEV) < frac).float()
+    return masks
+
+
+def run_arm(arm, corpus, rows_train, rows_val, log):
+    model = T.GPT(corpus.V).to(DEV)
+    sd = torch.load(r"D:\user\flypoet\logs_v2\std_model.pt",
+                    map_location=DEV, weights_only=True)
+    model.load_state_dict(sd)
+    model.train()
+    opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=0.0)
+
+    streams_tr = {d: domain_stream(rows_train, D2I[d], corpus.stoi) for d in DOMAINS}
+    streams_va = {d: domain_stream(rows_val, D2I[d], corpus.stoi) for d in DOMAINS}
+
+    # stage -1: base model on all domains
+    evals0 = {d: eval_domain(model, streams_va[d]) for d in DOMAINS}
+    log.write(json.dumps({"arm": arm, "stage": 0, "domain": None,
+                          "evals": evals0}) + "\n")
+    log.flush()
+    print(f"[{arm}] base evals: " + " ".join(f"{d}={v:.3f}" for d, v in evals0.items()),
+          flush=True)
+
+    history = [{"stage": 0, "trained_on": None, "evals": evals0}]
+    stage_losses = {}   # domain -> loss right after ITS stage
+
+    for si, dom in enumerate(DOMAINS, start=1):
+        masks = comp_masks(model, si) if arm in ("comp", "fly") else None
+        mu = sigma = None
+        n_onset, onset_ls = 20, []
+        gated = total = 0
+        arr = streams_tr[dom]
+        for step in range(1, STEPS + 1):
+            x, y = batches(arr, BATCH)
+            opt.zero_grad(set_to_none=True)
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                _, loss = model(x, y)
+            l = loss.item()
+            if mu is None:
+                onset_ls.append(l)
+                if len(onset_ls) == n_onset:
+                    mu = float(np.mean(onset_ls))
+                    sigma = float(np.std(onset_ls)) + 1e-6
+            else:
+                mu = 0.98 * mu + 0.02 * l
+                sigma = 0.98 * sigma + 0.02 * abs(l - mu)
+            allow = True
+            if arm == "fly" and mu is not None:
+                allow = l > mu + GATE_K * sigma
+                gated += (not allow)
+            total += 1
+            if allow:
+                loss.backward()
+                if masks is not None:
+                    for name, p in model.named_parameters():
+                        mk = masks.get(name)
+                        if mk is not None and p.grad is not None:
+                            p.grad.mul_(mk)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                opt.step()
+            if step % 200 == 0:
+                log.write(json.dumps({"arm": arm, "stage": si, "domain": dom,
+                                      "step": step, "loss": round(l, 4),
+                                      "gate_pass": round(1 - gated / total, 3)})
+                          + "\n")
+                log.flush()
+                print(f"[{arm}] s{si} {dom} step{step} loss={l:.3f} "
+                      f"gate_pass={1 - gated / total:.2f}", flush=True)
+
+        evals = {d: eval_domain(model, streams_va[d]) for d in DOMAINS[:si]}
+        if arm != "ft":   # unseen domains drift too; track for all arms
+            for d in DOMAINS[si:]:
+                evals[d] = eval_domain(model, streams_va[d])
+        stage_losses[dom] = evals[dom]
+        history.append({"stage": si, "trained_on": dom, "evals": evals})
+        log.write(json.dumps({"arm": arm, "stage": si, "domain": dom,
+                              "evals": evals}) + "\n")
+        log.flush()
+        print(f"[{arm}] after {dom}: " +
+              " ".join(f"{d}={v:.3f}" for d, v in evals.items()), flush=True)
+
+    forgetting = {d: round(stage_losses[d] - history[-1]["evals"][d], 4)
+                  for d in DOMAINS}
+    fwd_gain = {d: round(history[0]["evals"][d] - history[-1]["evals"][d], 4)
+                for d in DOMAINS}
+    return {"arm": arm, "history": history,
+            "forgetting": forgetting, "improvement": fwd_gain}
+
+
+def main():
+    arm = sys.argv[1] if len(sys.argv) > 1 else "ft"
+    global STEPS
+    if len(sys.argv) > 2:
+        STEPS = int(sys.argv[2])
+    torch.manual_seed(7)
+    np.random.seed(7)
+    corpus = T.Corpus()
+    rows_train = load_rows("train")
+    rows_val = load_rows("val")
+    os.makedirs(r"D:\user\flypoet\logs_v2", exist_ok=True)
+    with open(rf"D:\user\flypoet\logs_v2\cl_{arm}_curve.jsonl", "a", encoding="utf-8") as log:
+        res = run_arm(arm, corpus, rows_train, rows_val, log)
+    avg_f = float(np.mean(list(res["forgetting"].values())))
+    avg_i = float(np.mean(list(res["improvement"].values())))
+    res["avg_forgetting"] = round(avg_f, 4)
+    res["avg_improvement"] = round(avg_i, 4)
+    with open(rf"D:\user\flypoet\logs_v2\cl_{arm}_result.json", "w") as f:
+        json.dump(res, f, indent=1)
+    print(f"[{arm}] DONE avg_forgetting={avg_f:.4f} avg_improvement={avg_i:.4f}",
+          flush=True)
+
+
+if __name__ == "__main__":
+    main()

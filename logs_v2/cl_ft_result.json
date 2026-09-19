@@ -1,0 +1,63 @@
+{
+ "arm": "ft",
+ "history": [
+  {
+   "stage": 0,
+   "trained_on": null,
+   "evals": {
+    "news": 3.9366596817970274,
+    "dialogue": 4.247614574432373,
+    "law": 3.7498039960861207,
+    "technology": 3.5780919432640075
+   }
+  },
+  {
+   "stage": 1,
+   "trained_on": "news",
+   "evals": {
+    "news": 3.543956124782562
+   }
+  },
+  {
+   "stage": 2,
+   "trained_on": "dialogue",
+   "evals": {
+    "news": 3.963489019870758,
+    "dialogue": 4.292329859733582
+   }
+  },
+  {
+   "stage": 3,
+   "trained_on": "law",
+   "evals": {
+    "news": 4.144964945316315,
+    "dialogue": 4.633029055595398,
+    "law": 1.6105295360088348
+   }
+  },
+  {
+   "stage": 4,
+   "trained_on": "technology",
+   "evals": {
+    "news": 4.591533350944519,
+    "dialogue": 5.246604466438294,
+    "law": 2.376424491405487,
+    "technology": 3.9788541913032534
+   }
+  }
+ ],
+ "forgetting": {
+  "news": -1.0476,
+  "dialogue": -0.9543,
+  "law": -0.7659,
+  "technology": 0.0
+ },
+ "improvement": {
+  "news": -0.6549,
+  "dialogue": -0.999,
+  "law": 1.3734,
+  "technology": -0.4008
+ },
+ "avg_forgetting": -0.692,
+ "avg_improvement": -0.1703
+}
