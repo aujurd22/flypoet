@@ -46,7 +46,7 @@ def keep_scores(model, X):
             model(xb)
         for h in hs:
             h.remove()
-        feats.append(torch.cat(store).mean(0))
+        feats.append(torch.stack(store).mean(0))   # (n_blocks, B) -> (B,)
     return torch.cat(feats).numpy()
 
 
@@ -117,7 +117,8 @@ def main():
     print("--- single features (test AUC) ---", flush=True)
     test_scores = {}
     for name, (fs, fu, sign) in feats.items():
-        a = auc(sign * fs[3000:], sign * fu[3000:])
+        a = auc(torch.from_numpy(sign * fs[3000:]),
+                torch.from_numpy(sign * fu[3000:]))
         test_scores[name] = round(a, 4)
         print(f"{name}: {a:.4f}", flush=True)
 
@@ -143,8 +144,9 @@ def main():
     with torch.no_grad():
         s_te = (Xte @ w + b).squeeze(-1).cpu().numpy()
         s_tr = (Xtr @ w + b).squeeze(-1).cpu().numpy()
-    a_te = auc(s_te[yte == 1], s_te[yte == 0])
-    a_tr = auc(s_tr[:3000], s_tr[3000:])
+    a_te = auc(torch.from_numpy(s_te[yte.cpu().numpy() == 1]),
+               torch.from_numpy(s_te[yte.cpu().numpy() == 0]))
+    a_tr = auc(torch.from_numpy(s_tr[:3000]), torch.from_numpy(s_tr[3000:]))
     print(f"ensemble: train-AUC {a_tr:.4f} test-AUC {a_te:.4f}", flush=True)
     test_scores["ensemble_test"] = round(a_te, 4)
 

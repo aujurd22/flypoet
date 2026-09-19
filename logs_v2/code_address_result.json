@@ -1,0 +1,10 @@
+{
+ "checkpoint": "flynetS_k25_24k",
+ "stability_same": 0.2307,
+ "stability_diff": 0.1513,
+ "lift": 1.525,
+ "spearman_code_pmi": 0.0805,
+ "spearman_dense_pmi": 0.2079,
+ "completion_self": 0.2026,
+ "completion_mismatch": 0.1525
+}

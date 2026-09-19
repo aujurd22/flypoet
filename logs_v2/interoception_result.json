@@ -1,0 +1,9 @@
+{
+ "spearman_rate_nll_train": -0.0615,
+ "spearman_rate_nll_val": -0.0684,
+ "auc_rate_highloss_train": 0.5366,
+ "auc_rate_highloss_val": 0.5383,
+ "auc_rate_ood": 0.5005,
+ "mean_rate_train": 0.5868,
+ "mean_rate_val": 0.5868
+}

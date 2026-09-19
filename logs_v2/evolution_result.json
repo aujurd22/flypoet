@@ -1,0 +1,212 @@
+{
+ "flynetS_k02": {
+  "base_env": {
+   "finance": 4.0552,
+   "education": 3.9273
+  },
+  "envs": {
+   "finance": {
+    "ttc": 50,
+    "censored": false,
+    "final_env_val": 3.2403,
+    "drop": 0.8149,
+    "retention": {
+     "news": 4.2558,
+     "dialogue": 4.4626,
+     "law": 4.2338,
+     "technology": 3.8824,
+     "finance": 3.2403
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.7074,
+    "drop": 0.2199,
+    "retention": {
+     "news": 4.1893,
+     "dialogue": 4.3924,
+     "law": 4.1411,
+     "technology": 3.8447,
+     "finance": 3.2403,
+     "education": 3.7074
+    }
+   }
+  }
+ },
+ "flynetS_k15": {
+  "base_env": {
+   "finance": 3.7139,
+   "education": 3.5835
+  },
+  "envs": {
+   "finance": {
+    "ttc": 50,
+    "censored": false,
+    "final_env_val": 2.9522,
+    "drop": 0.7617,
+    "retention": {
+     "news": 3.9158,
+     "dialogue": 4.1696,
+     "law": 3.8283,
+     "technology": 3.5567,
+     "finance": 2.9522
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.3947,
+    "drop": 0.1889,
+    "retention": {
+     "news": 3.8635,
+     "dialogue": 4.1243,
+     "law": 3.752,
+     "technology": 3.5314,
+     "finance": 2.9522,
+     "education": 3.3947
+    }
+   }
+  }
+ },
+ "flynetS_k25": {
+  "base_env": {
+   "finance": 3.6554,
+   "education": 3.5233
+  },
+  "envs": {
+   "finance": {
+    "ttc": 50,
+    "censored": false,
+    "final_env_val": 2.891,
+    "drop": 0.7644,
+    "retention": {
+     "news": 3.8647,
+     "dialogue": 4.1314,
+     "law": 3.7756,
+     "technology": 3.5028,
+     "finance": 2.891
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.3386,
+    "drop": 0.1847,
+    "retention": {
+     "news": 3.8201,
+     "dialogue": 4.0878,
+     "law": 3.6793,
+     "technology": 3.4797,
+     "finance": 2.891,
+     "education": 3.3386
+    }
+   }
+  }
+ },
+ "flynetS_k40": {
+  "base_env": {
+   "finance": 3.662,
+   "education": 3.5431
+  },
+  "envs": {
+   "finance": {
+    "ttc": 100,
+    "censored": false,
+    "final_env_val": 2.9139,
+    "drop": 0.7481,
+    "retention": {
+     "news": 3.8897,
+     "dialogue": 4.1354,
+     "law": 3.79,
+     "technology": 3.5167,
+     "finance": 2.9139
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.3556,
+    "drop": 0.1875,
+    "retention": {
+     "news": 3.8447,
+     "dialogue": 4.0981,
+     "law": 3.7136,
+     "technology": 3.4963,
+     "finance": 2.9139,
+     "education": 3.3556
+    }
+   }
+  }
+ },
+ "flynetS_e90": {
+  "base_env": {
+   "finance": 3.7633,
+   "education": 3.6362
+  },
+  "envs": {
+   "finance": {
+    "ttc": 100,
+    "censored": false,
+    "final_env_val": 2.993,
+    "drop": 0.7702,
+    "retention": {
+     "news": 3.9698,
+     "dialogue": 4.2211,
+     "law": 3.9068,
+     "technology": 3.6076,
+     "finance": 2.993
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.4587,
+    "drop": 0.1775,
+    "retention": {
+     "news": 3.9287,
+     "dialogue": 4.1825,
+     "law": 3.8113,
+     "technology": 3.5788,
+     "finance": 2.993,
+     "education": 3.4587
+    }
+   }
+  }
+ },
+ "std_s8": {
+  "base_env": {
+   "finance": 3.6927,
+   "education": 3.5823
+  },
+  "envs": {
+   "finance": {
+    "ttc": 50,
+    "censored": false,
+    "final_env_val": 2.9331,
+    "drop": 0.7596,
+    "retention": {
+     "news": 3.9203,
+     "dialogue": 4.1697,
+     "law": 3.8133,
+     "technology": 3.5416,
+     "finance": 2.9331
+    }
+   },
+   "education": {
+    "ttc": 1000,
+    "censored": true,
+    "final_env_val": 3.4035,
+    "drop": 0.1788,
+    "retention": {
+     "news": 3.8808,
+     "dialogue": 4.1344,
+     "law": 3.7174,
+     "technology": 3.5129,
+     "finance": 2.9331,
+     "education": 3.4035
+    }
+   }
+  }
+ }
+}

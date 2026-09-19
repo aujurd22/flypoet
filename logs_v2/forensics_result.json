@@ -1,0 +1,7 @@
+{
+ "nll": 0.6048,
+ "keep": 0.5034,
+ "maxnll": 0.5533,
+ "bigram": 0.4799,
+ "ensemble_test": 0.5173
+}
