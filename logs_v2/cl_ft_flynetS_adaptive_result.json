@@ -1,0 +1,64 @@
+{
+ "arm": "ft",
+ "trunk": "flynetS_adaptive",
+ "history": [
+  {
+   "stage": 0,
+   "trained_on": null,
+   "evals": {
+    "news": 3.915893316268921,
+    "dialogue": 4.231901240348816,
+    "law": 3.797280323505402,
+    "technology": 3.5679191946983337
+   }
+  },
+  {
+   "stage": 1,
+   "trained_on": "news",
+   "evals": {
+    "news": 3.57469220161438
+   }
+  },
+  {
+   "stage": 2,
+   "trained_on": "dialogue",
+   "evals": {
+    "news": 4.026945567131042,
+    "dialogue": 4.359603667259217
+   }
+  },
+  {
+   "stage": 3,
+   "trained_on": "law",
+   "evals": {
+    "news": 4.230146718025208,
+    "dialogue": 4.721100521087647,
+    "law": 1.6452797532081604
+   }
+  },
+  {
+   "stage": 4,
+   "trained_on": "technology",
+   "evals": {
+    "news": 4.654086685180664,
+    "dialogue": 5.316930723190308,
+    "law": 2.3057208478450777,
+    "technology": 4.046459829807281
+   }
+  }
+ ],
+ "forgetting": {
+  "news": -1.0794,
+  "dialogue": -0.9573,
+  "law": -0.6604,
+  "technology": 0.0
+ },
+ "improvement": {
+  "news": -0.7382,
+  "dialogue": -1.085,
+  "law": 1.4916,
+  "technology": -0.4785
+ },
+ "avg_forgetting": -0.6743,
+ "avg_improvement": -0.2025
+}
