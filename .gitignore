@@ -9,3 +9,7 @@ __pycache__/
 data/logs/
 *.log
 data/luxun-master/
+data/c4_modern.txt
+data_v2/train.bin
+decide_data/*.jsonl
+decide_data/*.pt
