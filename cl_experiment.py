@@ -188,14 +188,17 @@ def main():
         STEPS = int(sys.argv[2])
     trunk = sys.argv[3] if len(sys.argv) > 3 else "std"
     comp_frac = float(sys.argv[4]) if len(sys.argv) > 4 else COMP_FRAC
-    torch.manual_seed(7)
-    np.random.seed(7)
+    seed = int(sys.argv[5]) if len(sys.argv) > 5 else 7
+    torch.manual_seed(seed)
+    np.random.seed(seed)
     corpus = T.Corpus()
     rows_train = load_rows("train")
     rows_val = load_rows("val")
     logdir = os.path.join(ROOT, "logs_v2")
     os.makedirs(logdir, exist_ok=True)
     suffix = f"_c{comp_frac:g}" if arm in ("comp", "fly") and comp_frac != COMP_FRAC else ""
+    if seed != 7:
+        suffix += f"_s{seed}"
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_curve.jsonl"), "a",
               encoding="utf-8") as log:
         res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac)
@@ -204,6 +207,7 @@ def main():
     res["avg_forgetting"] = round(avg_f, 4)
     res["avg_improvement"] = round(avg_i, 4)
     res["comp_frac"] = comp_frac
+    res["seed"] = seed
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_result.json"), "w") as f:
         json.dump(res, f, indent=1)
     print(f"[{arm}/{trunk}{suffix}] DONE avg_forgetting={avg_f:.4f} "
