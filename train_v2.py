@@ -65,12 +65,18 @@ class RMSNorm(nn.Module):
 
 
 class KWTA(nn.Module):
-    """Top-k channel sparsification. impl: 'torch' (exact) | 'cuda' (adaptive)."""
-    def __init__(self, k_frac, impl="torch"):
+    """Channel sparsification. impl:
+      'torch'  exact top-k keep
+      'cuda'   adaptive threshold (Krotov-Hopfield style)
+      'energy' keep the smallest channel set holding e_frac of |x| energy
+               (graded, per-token budget — no fixed keep rate)"""
+    def __init__(self, k_frac, impl="torch", e_frac=0.90):
         super().__init__()
         self.k_frac = k_frac
         self.impl = impl
+        self.e_frac = e_frac
         self._cuda_fn = None
+        self.last_keep = None      # tensor: mean keep fraction, set in forward
 
     def forward(self, x):
         d = x.shape[-1]
@@ -82,6 +88,19 @@ class KWTA(nn.Module):
             in_dtype = x.dtype
             y = self._cuda_fn(x.float(), self.k_frac)
             return y.to(in_dtype)
+        if self.impl == "energy":
+            in_dtype = x.dtype
+            xf = x.float()
+            mag = xf.abs()
+            total = mag.sum(-1, keepdim=True) + 1e-8
+            s, _ = torch.sort(mag, dim=-1, descending=True)
+            csum = s.cumsum(-1)
+            k_i = (csum < self.e_frac * total).sum(-1, keepdim=True)
+            k_i = k_i.clamp(min=1, max=d)
+            thr = s.gather(-1, k_i - 1)            # value of last kept channel
+            keep = mag >= thr
+            self.last_keep = keep.detach().float().mean()
+            return (xf * keep).to(in_dtype)
         thr = torch.kthvalue(x, d - k + 1, dim=-1, keepdim=True).values
         return x * (x >= thr)
 
@@ -101,7 +120,8 @@ class Block(nn.Module):
         self.w2 = nn.Linear(ffn_h, d, bias=False)
         if kwta_opts:
             self.kwta = KWTA(kwta_opts.get("k_frac", 0.10),
-                             impl=kwta_opts.get("impl", "torch"))
+                             impl=kwta_opts.get("impl", "torch"),
+                             e_frac=kwta_opts.get("e_frac", 0.90))
         else:
             self.kwta = None
         self.register_buffer("cos", cos, persistent=False)
@@ -176,18 +196,37 @@ def main():
     ap.add_argument("--steps", type=int, default=12000)
     ap.add_argument("--kfrac", type=float, default=0.10,
                     help="k-WTA channel keep fraction (sparsity sweep)")
+    ap.add_argument("--impl", choices=["torch", "cuda", "energy"], default=None,
+                    help="override k-WTA implementation")
+    ap.add_argument("--e_frac", type=float, default=0.90,
+                    help="energy target for impl=energy")
+    ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--d", type=int, default=768)
+    ap.add_argument("--layers", type=int, default=12)
+    ap.add_argument("--heads", type=int, default=12)
+    ap.add_argument("--ffn_h", type=int, default=2048)
+    ap.add_argument("--batch", type=int, default=24)
+    ap.add_argument("--sleep_every", type=int, default=0,
+                    help="if >0, run a forgetting shower every N grad steps")
+    ap.add_argument("--sleep_len", type=int, default=0,
+                    help="shower steps per sleep phase (data-free, no grad)")
     ap.add_argument("--tag", default="", help="suffix for output files, e.g. _k02")
     args = ap.parse_args()
+
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
     corpus = Corpus()
     kwta_opts = None
     if args.arm in ("flynetS", "flynetS_adaptive"):
-        kwta_opts = {"impl": "cuda" if args.arm == "flynetS_adaptive" else "torch",
-                     "k_frac": args.kfrac}
-    model = GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
+        impl = args.impl or ("cuda" if args.arm == "flynetS_adaptive" else "torch")
+        kwta_opts = {"impl": impl, "k_frac": args.kfrac, "e_frac": args.e_frac}
+    model = GPT(corpus.V, d=args.d, layers=args.layers, heads=args.heads,
+                ffn_h=args.ffn_h, kwta_opts=kwta_opts).to(DEV)
     nparam = sum(p.numel() for p in model.parameters())
-    print(f"[{args.arm}{args.tag}] k={args.kfrac:g} | {nparam / 1e6:.1f}M params | bf16 "
-          f"| RoPE+RMSNorm+SwiGLU+SDPA", flush=True)
+    print(f"[{args.arm}{args.tag}] k={args.kfrac:g} impl={kwta_opts['impl'] if kwta_opts else '-'} "
+          f"d={args.d} L={args.layers} seed={args.seed} | {nparam / 1e6:.1f}M params | bf16",
+          flush=True)
 
     opt = torch.optim.AdamW(model.parameters(), lr=6e-4, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=6e-4,
@@ -224,6 +263,9 @@ def main():
                 model(x, collect_final=True)
             h = model._last_hidden[::4, ::4].float().cpu().numpy().reshape(-1, model._last_hidden.shape[-1])
             erank = effective_rank(h[:2000])
+            keeps = [float(b.kwta.last_keep) for b in model.blocks
+                     if b.kwta is not None and b.kwta.last_keep is not None]
+            keep_tag = round(sum(keeps) / len(keeps), 4) if keeps else None
             idx = torch.tensor([[corpus.stoi.get(c, 1) for c in "春"]], device=DEV)
             for _ in range(150):
                 logits, _ = model(idx[:, -256:])
@@ -231,9 +273,11 @@ def main():
                 idx = torch.cat([idx, torch.multinomial(probs, 1)], 1)
             text = "".join(corpus.itos.get(str(i), "") for i in idx[0].tolist())
             d3 = distinct_n(text, 3)
-            probes.write(json.dumps({"step": step, "val": round(vl, 4),
-                                     "erank": round(erank, 1),
-                                     "distinct3": round(d3, 3)}) + "\n")
+            rec = {"step": step, "val": round(vl, 4),
+                   "erank": round(erank, 1), "distinct3": round(d3, 3)}
+            if keep_tag is not None:
+                rec["keep"] = keep_tag
+            probes.write(json.dumps(rec) + "\n")
             probes.flush()
             samples.write(f"\n== step {step} val={vl:.3f} erank={erank:.0f} ==\n{text}\n")
             samples.flush()
@@ -245,8 +289,21 @@ def main():
     t0 = time.time()
     tok_total = 0
     model.train()
+
+    @torch.no_grad()
+    def shower_step():
+        """Active-forgetting shower: decay low-|w| band (Berry 2018 / SHY)."""
+        for p in model.parameters():
+            if p.ndim != 2:
+                continue
+            flat = p.data.abs().flatten()
+            k = max(1, int(flat.numel() * 0.10))
+            thr = flat.kthvalue(k).values
+            low = p.data.abs() <= thr
+            p.data[low] *= (1 - 1e-3)
+
     for step in range(1, args.steps + 1):
-        x, y = corpus.batches(corpus.train, 24, 256)
+        x, y = corpus.batches(corpus.train, args.batch, 256)
         opt.zero_grad(set_to_none=True)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             _, loss = model(x, y)
@@ -254,6 +311,10 @@ def main():
         gn = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0).item()
         opt.step()
         sched.step()
+        if args.sleep_len and args.sleep_every and step % args.sleep_every == 0:
+            for _ in range(args.sleep_len):
+                shower_step()
+            print(f"    sleep phase done after step {step}", flush=True)
         tok_total += x.numel()
         if step % 100 == 0:
             rec = {"step": step, "loss": round(loss.item(), 4),
@@ -267,7 +328,9 @@ def main():
 
     torch.save(model.state_dict(), os.path.join(ROOT, "logs_v2", f"{name}_model.pt"))
     json.dump({"arm": args.arm, "tag": args.tag, "k_frac": args.kfrac,
-               "steps": args.steps, "params_M": nparam / 1e6},
+               "impl": kwta_opts["impl"] if kwta_opts else None,
+               "e_frac": args.e_frac, "d": args.d, "layers": args.layers,
+               "seed": args.seed, "steps": args.steps, "params_M": nparam / 1e6},
               open(os.path.join(ROOT, "logs_v2", f"{name}_final.json"), "w"))
     print(f"[{name}] DONE", flush=True)
 

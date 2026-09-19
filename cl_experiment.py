@@ -36,7 +36,7 @@ LR = 1e-4
 DOMAINS = ["news", "dialogue", "law", "technology"]
 D2I = {"general": 0, "news": 1, "encyclopedia": 2, "technology": 3, "law": 4,
        "education": 5, "dialogue": 6, "finance": 7}
-COMP_FRAC = 0.30
+COMP_FRAC = 0.30          # default; override with --comp_frac
 GATE_K = 0.25          # step only when loss > mu + K*sigma
 
 
@@ -94,7 +94,7 @@ def comp_masks(model, domain_idx, frac=COMP_FRAC):
     return masks
 
 
-def run_arm(arm, trunk, corpus, rows_train, rows_val, log):
+def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC):
     kwta_opts = ({"impl": "cuda"} if trunk == "flynetS_adaptive" else
                  {"impl": "torch"} if trunk == "flynetS" else None)
     model = T.GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
@@ -119,7 +119,7 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log):
     stage_losses = {}   # domain -> loss right after ITS stage
 
     for si, dom in enumerate(DOMAINS, start=1):
-        masks = comp_masks(model, si) if arm in ("comp", "fly") else None
+        masks = comp_masks(model, si, comp_frac) if arm in ("comp", "fly") else None
         mu = sigma = None
         n_onset, onset_ls = 20, []
         gated = total = 0
@@ -187,6 +187,7 @@ def main():
     if len(sys.argv) > 2:
         STEPS = int(sys.argv[2])
     trunk = sys.argv[3] if len(sys.argv) > 3 else "std"
+    comp_frac = float(sys.argv[4]) if len(sys.argv) > 4 else COMP_FRAC
     torch.manual_seed(7)
     np.random.seed(7)
     corpus = T.Corpus()
@@ -194,16 +195,18 @@ def main():
     rows_val = load_rows("val")
     logdir = os.path.join(ROOT, "logs_v2")
     os.makedirs(logdir, exist_ok=True)
-    with open(os.path.join(logdir, f"cl_{arm}_{trunk}_curve.jsonl"), "a",
+    suffix = f"_c{comp_frac:g}" if arm in ("comp", "fly") and comp_frac != COMP_FRAC else ""
+    with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_curve.jsonl"), "a",
               encoding="utf-8") as log:
-        res = run_arm(arm, trunk, corpus, rows_train, rows_val, log)
+        res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac)
     avg_f = float(np.mean(list(res["forgetting"].values())))
     avg_i = float(np.mean(list(res["improvement"].values())))
     res["avg_forgetting"] = round(avg_f, 4)
     res["avg_improvement"] = round(avg_i, 4)
-    with open(os.path.join(logdir, f"cl_{arm}_{trunk}_result.json"), "w") as f:
+    res["comp_frac"] = comp_frac
+    with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_result.json"), "w") as f:
         json.dump(res, f, indent=1)
-    print(f"[{arm}/{trunk}] DONE avg_forgetting={avg_f:.4f} "
+    print(f"[{arm}/{trunk}{suffix}] DONE avg_forgetting={avg_f:.4f} "
           f"avg_improvement={avg_i:.4f}", flush=True)
 
 
