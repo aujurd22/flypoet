@@ -51,14 +51,12 @@ def keep_scores(model, X):
 
 
 @torch.no_grad()
-def bigram_scores(bigram, stoi, X):
+def bigram_scores(logp, X):
     out = []
     for i in range(0, len(X), 256):
         xb = X[i:i + 256].numpy()
         for row in xb:
-            lls = []
-            for a, b in zip(row[:-1], row[1:]):
-                lls.append(bigram.get((a, b), -12.0))
+            lls = [logp.get((a, b), -12.0) for a, b in zip(row[:-1], row[1:])]
             out.append(float(np.mean(lls)))
     return np.array(out)
 
@@ -104,9 +102,12 @@ def main():
     f3_s = maxnll(X_seen)
     f3_u = maxnll(X_unseen)
     print("feature 4/4: bigram...", flush=True)
-    bigram = build_bigram_model(corpus.train[: 3_000_000])
-    f4_s = bigram_scores(bigram, corpus.stoi, X_seen)
-    f4_u = bigram_scores(bigram, corpus.stoi, X_unseen)
+    big, uni, Vb = build_bigram_model(corpus.train[: 3_000_000])
+    import math
+    logp = {(a, b): math.log((c + 0.1) / (uni[a] + 0.1 * Vb))
+            for (a, b), c in big.items()}
+    f4_s = bigram_scores(logp, X_seen)
+    f4_u = bigram_scores(logp, X_unseen)
 
     def split(f):
         return f[:3000], f[3000:]

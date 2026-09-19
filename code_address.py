@@ -88,7 +88,7 @@ def main():
             continue
         take = rng.choice(hits, size=OCC_PER, replace=False)
         for p in take:
-            positions.append(int(p) + WIN - 1)
+            positions.append(int(p))          # window ENDS at the char itself
             owner.append(ci)
     positions = np.array(positions[: N_CONCEPTS * OCC_PER])
     owner = np.array(owner[: len(positions)])
