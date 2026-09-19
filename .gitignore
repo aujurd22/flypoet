@@ -13,3 +13,8 @@ data/c4_modern.txt
 data_v2/train.bin
 decide_data/*.jsonl
 decide_data/*.pt
+*.log
+*_out.txt
+*_err.txt
+*.bat
+local_env*

@@ -24,7 +24,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-sys.path.insert(0, r"D:\user\flypoet")
+ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, ROOT)
 import train_v2 as T
 
 DEV = "cuda"
@@ -41,7 +42,7 @@ GATE_K = 0.25          # step only when loss > mu + K*sigma
 
 def load_rows(split):
     rows = []
-    with open(rf"D:\user\flypoet\decide_data\{split}.jsonl", encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "decide_data", f"{split}.jsonl"), encoding="utf-8") as f:
         for line in f:
             d = json.loads(line)
             rows.append((d["ids"], d["label"]))
@@ -93,9 +94,11 @@ def comp_masks(model, domain_idx, frac=COMP_FRAC):
     return masks
 
 
-def run_arm(arm, corpus, rows_train, rows_val, log):
-    model = T.GPT(corpus.V).to(DEV)
-    sd = torch.load(r"D:\user\flypoet\logs_v2\std_model.pt",
+def run_arm(arm, trunk, corpus, rows_train, rows_val, log):
+    kwta_opts = ({"impl": "cuda"} if trunk == "flynetS_adaptive" else
+                 {"impl": "torch"} if trunk == "flynetS" else None)
+    model = T.GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
+    sd = torch.load(os.path.join(ROOT, "logs_v2", f"{trunk}_model.pt"),
                     map_location=DEV, weights_only=True)
     model.load_state_dict(sd)
     model.train()
@@ -106,11 +109,11 @@ def run_arm(arm, corpus, rows_train, rows_val, log):
 
     # stage -1: base model on all domains
     evals0 = {d: eval_domain(model, streams_va[d]) for d in DOMAINS}
-    log.write(json.dumps({"arm": arm, "stage": 0, "domain": None,
+    log.write(json.dumps({"arm": arm, "trunk": trunk, "stage": 0, "domain": None,
                           "evals": evals0}) + "\n")
     log.flush()
-    print(f"[{arm}] base evals: " + " ".join(f"{d}={v:.3f}" for d, v in evals0.items()),
-          flush=True)
+    print(f"[{arm}/{trunk}] base evals: " +
+          " ".join(f"{d}={v:.3f}" for d, v in evals0.items()), flush=True)
 
     history = [{"stage": 0, "trained_on": None, "evals": evals0}]
     stage_losses = {}   # domain -> loss right after ITS stage
@@ -155,7 +158,7 @@ def run_arm(arm, corpus, rows_train, rows_val, log):
                                       "gate_pass": round(1 - gated / total, 3)})
                           + "\n")
                 log.flush()
-                print(f"[{arm}] s{si} {dom} step{step} loss={l:.3f} "
+                print(f"[{arm}/{trunk}] s{si} {dom} step{step} loss={l:.3f} "
                       f"gate_pass={1 - gated / total:.2f}", flush=True)
 
         evals = {d: eval_domain(model, streams_va[d]) for d in DOMAINS[:si]}
@@ -167,14 +170,14 @@ def run_arm(arm, corpus, rows_train, rows_val, log):
         log.write(json.dumps({"arm": arm, "stage": si, "domain": dom,
                               "evals": evals}) + "\n")
         log.flush()
-        print(f"[{arm}] after {dom}: " +
+        print(f"[{arm}/{trunk}] after {dom}: " +
               " ".join(f"{d}={v:.3f}" for d, v in evals.items()), flush=True)
 
     forgetting = {d: round(stage_losses[d] - history[-1]["evals"][d], 4)
                   for d in DOMAINS}
     fwd_gain = {d: round(history[0]["evals"][d] - history[-1]["evals"][d], 4)
                 for d in DOMAINS}
-    return {"arm": arm, "history": history,
+    return {"arm": arm, "trunk": trunk, "history": history,
             "forgetting": forgetting, "improvement": fwd_gain}
 
 
@@ -183,22 +186,25 @@ def main():
     global STEPS
     if len(sys.argv) > 2:
         STEPS = int(sys.argv[2])
+    trunk = sys.argv[3] if len(sys.argv) > 3 else "std"
     torch.manual_seed(7)
     np.random.seed(7)
     corpus = T.Corpus()
     rows_train = load_rows("train")
     rows_val = load_rows("val")
-    os.makedirs(r"D:\user\flypoet\logs_v2", exist_ok=True)
-    with open(rf"D:\user\flypoet\logs_v2\cl_{arm}_curve.jsonl", "a", encoding="utf-8") as log:
-        res = run_arm(arm, corpus, rows_train, rows_val, log)
+    logdir = os.path.join(ROOT, "logs_v2")
+    os.makedirs(logdir, exist_ok=True)
+    with open(os.path.join(logdir, f"cl_{arm}_{trunk}_curve.jsonl"), "a",
+              encoding="utf-8") as log:
+        res = run_arm(arm, trunk, corpus, rows_train, rows_val, log)
     avg_f = float(np.mean(list(res["forgetting"].values())))
     avg_i = float(np.mean(list(res["improvement"].values())))
     res["avg_forgetting"] = round(avg_f, 4)
     res["avg_improvement"] = round(avg_i, 4)
-    with open(rf"D:\user\flypoet\logs_v2\cl_{arm}_result.json", "w") as f:
+    with open(os.path.join(logdir, f"cl_{arm}_{trunk}_result.json"), "w") as f:
         json.dump(res, f, indent=1)
-    print(f"[{arm}] DONE avg_forgetting={avg_f:.4f} avg_improvement={avg_i:.4f}",
-          flush=True)
+    print(f"[{arm}/{trunk}] DONE avg_forgetting={avg_f:.4f} "
+          f"avg_improvement={avg_i:.4f}", flush=True)
 
 
 if __name__ == "__main__":

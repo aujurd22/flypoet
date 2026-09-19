@@ -16,7 +16,8 @@ np.random.seed(7)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 DEV = "cuda"
-DATA = r"D:/user/flypoet/data_v2"
+ROOT = os.path.dirname(os.path.abspath(__file__))
+DATA = os.path.join(ROOT, "data_v2")
 
 
 class Corpus:
@@ -98,7 +99,11 @@ class Block(nn.Module):
         self.ln2 = RMSNorm(d)
         self.w13 = nn.Linear(d, 2 * ffn_h, bias=False)   # SwiGLU gate+value
         self.w2 = nn.Linear(ffn_h, d, bias=False)
-        self.kwta = KWTA(0.10, **kwta_opts) if kwta_opts else None
+        if kwta_opts:
+            self.kwta = KWTA(kwta_opts.get("k_frac", 0.10),
+                             impl=kwta_opts.get("impl", "torch"))
+        else:
+            self.kwta = None
         self.register_buffer("cos", cos, persistent=False)
         self.register_buffer("sin", sin, persistent=False)
 
@@ -169,22 +174,29 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=["std", "flynetS", "flynetS_adaptive"], required=True)
     ap.add_argument("--steps", type=int, default=12000)
+    ap.add_argument("--kfrac", type=float, default=0.10,
+                    help="k-WTA channel keep fraction (sparsity sweep)")
+    ap.add_argument("--tag", default="", help="suffix for output files, e.g. _k02")
     args = ap.parse_args()
 
     corpus = Corpus()
-    kwta_opts = ({"impl": "torch"} if args.arm == "flynetS" else
-                 {"impl": "cuda"} if args.arm == "flynetS_adaptive" else None)
+    kwta_opts = None
+    if args.arm in ("flynetS", "flynetS_adaptive"):
+        kwta_opts = {"impl": "cuda" if args.arm == "flynetS_adaptive" else "torch",
+                     "k_frac": args.kfrac}
     model = GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
     nparam = sum(p.numel() for p in model.parameters())
-    print(f"[{args.arm}] {nparam / 1e6:.1f}M params | bf16 | RoPE+RMSNorm+SwiGLU+SDPA", flush=True)
+    print(f"[{args.arm}{args.tag}] k={args.kfrac:g} | {nparam / 1e6:.1f}M params | bf16 "
+          f"| RoPE+RMSNorm+SwiGLU+SDPA", flush=True)
 
     opt = torch.optim.AdamW(model.parameters(), lr=6e-4, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=6e-4,
                                                 total_steps=args.steps, pct_start=0.03)
-    os.makedirs("logs_v2", exist_ok=True)
-    curve = open(f"logs_v2/{args.arm}_curve.jsonl", "a", encoding="utf-8")
-    probes = open(f"logs_v2/{args.arm}_probes.jsonl", "a", encoding="utf-8")
-    samples = open(f"logs_v2/{args.arm}_samples.txt", "a", encoding="utf-8")
+    os.makedirs(os.path.join(ROOT, "logs_v2"), exist_ok=True)
+    name = f"{args.arm}{args.tag}"
+    curve = open(os.path.join(ROOT, "logs_v2", f"{name}_curve.jsonl"), "a", encoding="utf-8")
+    probes = open(os.path.join(ROOT, "logs_v2", f"{name}_probes.jsonl"), "a", encoding="utf-8")
+    samples = open(os.path.join(ROOT, "logs_v2", f"{name}_samples.txt"), "a", encoding="utf-8")
 
     @torch.no_grad()
     def val_loss():
@@ -253,10 +265,11 @@ def main():
             vl = val_loss()
             probe(step, vl)
 
-    torch.save(model.state_dict(), f"logs_v2/{args.arm}_model.pt")
-    json.dump({"arm": args.arm, "steps": args.steps, "params_M": nparam / 1e6},
-              open(f"logs_v2/{args.arm}_final.json", "w"))
-    print(f"[{args.arm}] DONE", flush=True)
+    torch.save(model.state_dict(), os.path.join(ROOT, "logs_v2", f"{name}_model.pt"))
+    json.dump({"arm": args.arm, "tag": args.tag, "k_frac": args.kfrac,
+               "steps": args.steps, "params_M": nparam / 1e6},
+              open(os.path.join(ROOT, "logs_v2", f"{name}_final.json"), "w"))
+    print(f"[{name}] DONE", flush=True)
 
 
 if __name__ == "__main__":

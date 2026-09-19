@@ -27,9 +27,15 @@ Full numbers, pre-registered judgment criteria, and the mistakes made along the 
 ```bash
 python train_v2.py --arm std --steps 24000
 python train_v2.py --arm flynetS --steps 24000
-# the adaptive arm needs MSVC + TORCH_CUDA_ARCH_LIST=8.9, see rerun_adaptive24k.bat
+# sparsity sweep: --kfrac 0.02 --tag _k02 (any keep fraction; outputs get the tag)
+# the adaptive arm needs MSVC + TORCH_CUDA_ARCH_LIST=8.9 (kernel compiles lazily,
+# cached builds are reused automatically)
 
 python calibration_eval.py --arm std --model logs_v2/std_model.pt --seed 0
 ```
 
-Paths are hard-coded for Windows (`D:\user\flypoet`) and need changing on other machines. Model weights are not committed (350MB each); training curves and eval JSONs live in `logs_v2/`.
+`train_v2.py` and `cl_experiment.py` resolve all paths relative to the repo root, so they run as-is once `data_v2/` exists. A few older helper scripts still show an illustrative `D:\user\...` layout — point them at your own checkout with a directory junction or an env var. Model weights are not committed (350MB each); training curves and eval JSONs live in `logs_v2/`.
+
+## What else is in the reports
+
+[REPORT_MEM.md](REPORT_MEM.md) extends the same trunk with three fly memory-management mechanisms: surprise-gated continual learning (79% less forgetting than plain fine-tuning), an NLL-based familiarity probe (set-level contamination detection AUC 0.93, single-window weak), and a data-free targeted forgetting shower that undoes the overfit tail (the uniform-decay control destroys the model — targeting is the mechanism).

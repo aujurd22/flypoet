@@ -102,13 +102,15 @@ mod = None
 
 
 def _get_mod():
-    """Lazy load: try prebuilt .pyd first (no MSVC needed), else compile."""
+    """Lazy load: try torch's cached build first (no MSVC needed), else compile."""
     global mod
     if mod is None:
         import importlib.util
-        pyd = (r"C:\Users\user\AppData\Local\torch_extensions"
-               r"\torch_extensions\Cache\py313_cu118\adaptive_kwta_v1"
-               r"\adaptive_kwta_v1.pyd")
+        cache_root = os.environ.get("TORCH_EXTENSIONS_DIR",
+                                    os.path.join(os.path.expanduser("~"),
+                                                 ".cache", "torch_extensions"))
+        pyd = os.path.join(cache_root, "py313_cu118", "adaptive_kwta_v1",
+                           "adaptive_kwta_v1.pyd")
         if os.path.exists(pyd):
             spec = importlib.util.spec_from_file_location("adaptive_kwta_v1", pyd)
             mod = importlib.util.module_from_spec(spec)
