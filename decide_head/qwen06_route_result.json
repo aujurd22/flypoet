@@ -1,0 +1,7 @@
+{
+ "task": "qwen06_routing_8class",
+ "accuracy": 0.633,
+ "test_size": 640,
+ "backbone": "Qwen3-0.6B-Base",
+ "method": "linear probe on last hidden state"
+}

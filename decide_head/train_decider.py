@@ -119,7 +119,8 @@ def main():
             print(f"    val acc(非弃权)={acc:.3f} | 弃权率={ab_rate:.1%}", flush=True)
             if acc > best_acc and step >= 1000:
                 best_acc = acc
-                torch.save(model.state_dict(), os.path.join(DATA, "best_decider.pt"))
+                torch.save(model.state_dict(),
+                           os.path.join(DATA, f"best_decider_{a.trunk}.pt"))
             model.train()
 
     # calibration quick-check on non-abstain predictions

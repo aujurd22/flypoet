@@ -40,13 +40,12 @@ def batches(rows, batch=32):
         yield x.to(DEV), y.to(DEV)
 
 
-@torch.no_grad()
 def collect_logits(model, rows):
     model.eval()
     logits_all, y_all = [], []
     for x, y in batches(rows):
-        with torch.autocast("cuda", dtype=torch.bfloat16):
-            logits, _ = model(x)
+        with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
+            logits = model(x)
         logits_all.append(logits.float().cpu())
         y_all.append(y.cpu())
     return torch.cat(logits_all), torch.cat(y_all)
@@ -78,7 +77,10 @@ def main():
                     map_location=T.DEV, weights_only=True)
     trunk.load_state_dict(sd)
     trunk.eval()
-    head_ckpt = a.ckpt or os.path.join(DATA, f"best_decider.pt")
+    head_ckpt = a.ckpt or os.path.join(DATA, f"best_decider_{a.trunk}.pt")
+    if not os.path.exists(head_ckpt):
+        head_ckpt = os.path.join(DATA, "best_decider.pt")  # legacy single-ckpt name
+        print(f"[warn] per-trunk ckpt missing, falling back to {head_ckpt}")
     head_sd = torch.load(head_ckpt, map_location=T.DEV, weights_only=True)
     model = FlyDecider(trunk).to(T.DEV)
     model.load_state_dict(head_sd)
@@ -97,11 +99,12 @@ def main():
 
     # ---- before: raw softmax
     def metrics(logits, y, temperature=1.0):
-        probs = F.softmax(logits / temperature, dim=-1)
+        # 9th column is the abstain logit; score top-1 over the 8 real classes
+        probs = F.softmax(logits[:, :8] / temperature, dim=-1)
         conf, pred = probs.max(dim=-1)
         correct = (pred == y).float()
         acc = float(correct.mean())
-        ece = ece_eval(conf.numpy(), correct.numpy())
+        ece = ece_eval(conf.detach().numpy(), correct.detach().numpy())
         brier = float(((conf - correct) ** 2).mean())
         return acc, ece, brier
 
@@ -111,9 +114,10 @@ def main():
     # ---- fit T on calib (minimize NLL)
     logT = torch.zeros(1, device=T.DEV, requires_grad=True)
     optT = torch.optim.LBFGS([logT], lr=0.1, max_iter=100)
+    logits_c_dev, y_c_dev = logits_c.to(T.DEV), y_c.to(T.DEV)
     def closure():
         optT.zero_grad()
-        loss = F.cross_entropy(logits_c / logT.exp(), y_c)
+        loss = F.cross_entropy(logits_c_dev / logT.exp(), y_c_dev)
         loss.backward()
         return loss
     optT.step(closure)

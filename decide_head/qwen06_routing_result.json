@@ -1,0 +1,5 @@
+{
+ "accuracy": 0.6468750238418579,
+ "test_size": 640,
+ "n_classes": 8
+}
