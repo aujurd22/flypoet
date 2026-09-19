@@ -1,0 +1,33 @@
+{"arm": "fly", "trunk": "std", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075}}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 200, "loss": 3.4384, "gate_pass": 0.265}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 400, "loss": 3.483, "gate_pass": 0.297}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 600, "loss": 3.4861, "gate_pass": 0.312}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 800, "loss": 3.4858, "gate_pass": 0.328}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1000, "loss": 3.4119, "gate_pass": 0.338}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1200, "loss": 3.3027, "gate_pass": 0.345}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1400, "loss": 3.3015, "gate_pass": 0.348}
+{"arm": "fly", "stage": 1, "domain": "news", "evals": {"news": 3.4254066824913023, "dialogue": 3.9610142827034, "law": 3.4320018172264097, "technology": 3.255403828620911}}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 200, "loss": 3.7705, "gate_pass": 0.395}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 400, "loss": 3.6055, "gate_pass": 0.36}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 600, "loss": 3.6319, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 800, "loss": 3.6727, "gate_pass": 0.364}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1000, "loss": 3.5731, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1200, "loss": 3.4398, "gate_pass": 0.369}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1400, "loss": 3.5905, "gate_pass": 0.371}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "evals": {"news": 3.5001962304115297, "dialogue": 3.815708839893341, "law": 3.505385172367096, "technology": 3.2992114543914797}}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 200, "loss": 2.0333, "gate_pass": 0.19}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 400, "loss": 1.8587, "gate_pass": 0.22}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 600, "loss": 1.7934, "gate_pass": 0.253}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 800, "loss": 1.5609, "gate_pass": 0.272}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1000, "loss": 1.6813, "gate_pass": 0.28}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1200, "loss": 1.587, "gate_pass": 0.297}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1400, "loss": 1.6542, "gate_pass": 0.316}
+{"arm": "fly", "stage": 3, "domain": "law", "evals": {"news": 3.6238530039787293, "dialogue": 3.9792482972145082, "law": 1.6404241025447845, "technology": 3.402426290512085}}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 200, "loss": 3.0172, "gate_pass": 0.315}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 400, "loss": 3.035, "gate_pass": 0.32}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 600, "loss": 2.7511, "gate_pass": 0.318}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 800, "loss": 2.7074, "gate_pass": 0.335}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1000, "loss": 2.834, "gate_pass": 0.337}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1200, "loss": 2.6628, "gate_pass": 0.343}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1400, "loss": 2.6197, "gate_pass": 0.338}
+{"arm": "fly", "stage": 4, "domain": "technology", "evals": {"news": 3.5502808451652528, "dialogue": 3.9898993134498597, "law": 1.9099738955497743, "technology": 3.1206566214561464}}

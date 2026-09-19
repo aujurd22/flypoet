@@ -2,6 +2,7 @@
 
 | tag | arm | k | impl | d | seed | steps | params_M | val | erank | d3 | keep |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| std_smoke_sl | std | 0.1 | None | 768 | 7 | 60 | 92.6 | 6.9906 | 1.8 | 0.843 | None |
 | flynetS_e75 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9622 | 82.9 | 0.715 | 0.3593 |
 | flynetS_e90 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9312 | 82.0 | 0.722 | 0.5846 |
 | flynetS_k02 | flynetS | 0.02 | None | None | None | 12000 | 92.6 | 4.1563 | 84.7 | 0.756 | None |
@@ -14,6 +15,9 @@
 | flynetS_k60 | flynetS | 0.6 | None | None | None | 12000 | 92.6 | 3.8991 | 81.0 | 0.765 | None |
 | std_s8 | std | 0.1 | None | 768 | 8 | 12000 | 92.6 | 3.8415 | 80.2 | 0.717 | None |
 | std_s9 | std | 0.1 | None | 768 | 9 | 12000 | 92.6 | 3.8777 | 84.1 | 0.73 | None |
+| std_sleep | std | 0.1 | None | 768 | 7 | 12000 | 92.6 | 3.8964 | 83.1 | 0.71 | None |
+| std_sleep_s8 | std | 0.1 | None | 768 | 8 | 12000 | 92.6 | 3.8396 | 79.4 | 0.705 | None |
+| std_sleep_s9 | std | 0.1 | None | 768 | 9 | 12000 | 92.6 | 3.88 | 82.0 | 0.742 | None |
 | flynetS_Lk25 | flynetS | 0.25 | torch | 1024 | 7 | 12000 | 215.8 | 4.3198 | 78.0 | 0.738 | None |
 | std_L | std | 0.1 | None | 1024 | 7 | 12000 | 215.8 | 4.1813 | 80.4 | 0.769 | None |
 | flynetS | flynetS | None | None | None | None | 24000 | 92.6 | 3.6613 | 84.2 | 0.789 | None |
