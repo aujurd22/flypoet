@@ -95,10 +95,17 @@ def comp_masks(model, domain_idx, frac=COMP_FRAC):
 
 
 def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
-            gate_k=GATE_K):
+            gate_k=GATE_K, gate_type="loss"):
     kwta_opts = ({"impl": "cuda"} if trunk == "flynetS_adaptive" else
-                 {"impl": "torch"} if trunk == "flynetS" else None)
-    model = T.GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
+                 {"impl": "torch", "k_frac": 0.25 if "k25" in trunk else 0.10}
+                 if trunk.startswith("flynetS") else None)
+    dims = {}
+    fin = os.path.join(ROOT, "logs_v2", f"{trunk}_final.json")
+    if os.path.exists(fin):
+        m = json.load(open(fin))
+        dims = dict(d=m.get("d", 768), layers=m.get("layers", 12),
+                    heads=m.get("heads", 12), ffn_h=m.get("ffn_h", 2048))
+    model = T.GPT(corpus.V, kwta_opts=kwta_opts, **dims).to(DEV)
     sd = torch.load(os.path.join(ROOT, "logs_v2", f"{trunk}_model.pt"),
                     map_location=DEV, weights_only=True)
     model.load_state_dict(sd)
@@ -122,14 +129,15 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
     for si, dom in enumerate(DOMAINS, start=1):
         masks = comp_masks(model, si, comp_frac) if arm in ("comp", "fly") else None
         mu = sigma = None
-        n_onset, onset_ls = 20, []
+        mu_e = sigma_e = None
+        n_onset, onset_ls, onset_e = 20, [], []
         gated = total = 0
         arr = streams_tr[dom]
         for step in range(1, STEPS + 1):
             x, y = batches(arr, BATCH)
             opt.zero_grad(set_to_none=True)
             with torch.autocast("cuda", dtype=torch.bfloat16):
-                _, loss = model(x, y)
+                logits, loss = model(x, y)
             l = loss.item()
             if mu is None:
                 onset_ls.append(l)
@@ -141,7 +149,21 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                 sigma = 0.98 * sigma + 0.02 * abs(l - mu)
             allow = True
             if arm == "fly" and mu is not None:
-                allow = l > mu + gate_k * sigma
+                if gate_type == "entropy":
+                    with torch.no_grad():
+                        pr = F.softmax(logits.float(), dim=-1)
+                        ent = float(-(pr * (pr + 1e-9).log()).sum(-1).mean())
+                    if mu_e is None:
+                        onset_e.append(ent)
+                        if len(onset_e) == n_onset:
+                            mu_e = float(np.mean(onset_e))
+                            sigma_e = float(np.std(onset_e)) + 1e-6
+                    else:
+                        mu_e = 0.98 * mu_e + 0.02 * ent
+                        sigma_e = 0.98 * sigma_e + 0.02 * abs(ent - mu_e)
+                    allow = ent > mu_e + gate_k * sigma_e
+                else:
+                    allow = l > mu + gate_k * sigma
                 gated += (not allow)
             total += 1
             if allow:
@@ -191,6 +213,10 @@ def main():
     comp_frac = float(sys.argv[4]) if len(sys.argv) > 4 else COMP_FRAC
     seed = int(sys.argv[5]) if len(sys.argv) > 5 else 7
     gate_k = float(sys.argv[6]) if len(sys.argv) > 6 else GATE_K
+    gate_type = sys.argv[8] if len(sys.argv) > 8 else "loss"
+    global DOMAINS
+    if len(sys.argv) > 7 and sys.argv[7]:
+        DOMAINS = tuple(sys.argv[7].split(","))
     torch.manual_seed(seed)
     np.random.seed(seed)
     corpus = T.Corpus()
@@ -201,12 +227,14 @@ def main():
     suffix = f"_c{comp_frac:g}" if arm in ("comp", "fly") and comp_frac != COMP_FRAC else ""
     if gate_k != GATE_K:
         suffix += f"_g{gate_k:g}"
+    if gate_type != "loss":
+        suffix += f"_gt-{gate_type}"
     if seed != 7:
         suffix += f"_s{seed}"
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_curve.jsonl"), "a",
               encoding="utf-8") as log:
         res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac,
-                      gate_k)
+                      gate_k, gate_type)
     avg_f = float(np.mean(list(res["forgetting"].values())))
     avg_i = float(np.mean(list(res["improvement"].values())))
     res["avg_forgetting"] = round(avg_f, 4)

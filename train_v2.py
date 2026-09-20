@@ -210,6 +210,8 @@ def main():
                     help="if >0, run a forgetting shower every N grad steps")
     ap.add_argument("--sleep_len", type=int, default=0,
                     help="shower steps per sleep phase (data-free, no grad)")
+    ap.add_argument("--snap_every", type=int, default=0,
+                    help="save a model snapshot every N steps")
     ap.add_argument("--tag", default="", help="suffix for output files, e.g. _k02")
     args = ap.parse_args()
 
@@ -322,6 +324,9 @@ def main():
             curve.write(json.dumps(rec) + "\n")
             curve.flush()
             print(rec, flush=True)
+        if args.snap_every and step % args.snap_every == 0:
+            torch.save(model.state_dict(),
+                       os.path.join(ROOT, "logs_v2", f"{name}_snap{step}.pt"))
         if step % 2000 == 0 or step == args.steps:
             vl = val_loss()
             probe(step, vl)
@@ -330,6 +335,7 @@ def main():
     json.dump({"arm": args.arm, "tag": args.tag, "k_frac": args.kfrac,
                "impl": kwta_opts["impl"] if kwta_opts else None,
                "e_frac": args.e_frac, "d": args.d, "layers": args.layers,
+               "heads": args.heads, "ffn_h": args.ffn_h,
                "seed": args.seed, "steps": args.steps, "params_M": nparam / 1e6},
               open(os.path.join(ROOT, "logs_v2", f"{name}_final.json"), "w"))
     print(f"[{name}] DONE", flush=True)

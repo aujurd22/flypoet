@@ -1,0 +1,18 @@
+{
+ "orig": {
+  "kl": NaN,
+  "top1_flip": NaN
+ },
+ "keep_top25": {
+  "kl": 2.4262,
+  "top1_flip": 0.6175
+ },
+ "keep_bottom75": {
+  "kl": 1.3147,
+  "top1_flip": 0.54
+ },
+ "random25": {
+  "kl": 3.9624,
+  "top1_flip": 0.7725
+ }
+}
