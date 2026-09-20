@@ -94,7 +94,8 @@ def comp_masks(model, domain_idx, frac=COMP_FRAC):
     return masks
 
 
-def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC):
+def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
+            gate_k=GATE_K):
     kwta_opts = ({"impl": "cuda"} if trunk == "flynetS_adaptive" else
                  {"impl": "torch"} if trunk == "flynetS" else None)
     model = T.GPT(corpus.V, kwta_opts=kwta_opts).to(DEV)
@@ -140,7 +141,7 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC):
                 sigma = 0.98 * sigma + 0.02 * abs(l - mu)
             allow = True
             if arm == "fly" and mu is not None:
-                allow = l > mu + GATE_K * sigma
+                allow = l > mu + gate_k * sigma
                 gated += (not allow)
             total += 1
             if allow:
@@ -189,6 +190,7 @@ def main():
     trunk = sys.argv[3] if len(sys.argv) > 3 else "std"
     comp_frac = float(sys.argv[4]) if len(sys.argv) > 4 else COMP_FRAC
     seed = int(sys.argv[5]) if len(sys.argv) > 5 else 7
+    gate_k = float(sys.argv[6]) if len(sys.argv) > 6 else GATE_K
     torch.manual_seed(seed)
     np.random.seed(seed)
     corpus = T.Corpus()
@@ -197,16 +199,20 @@ def main():
     logdir = os.path.join(ROOT, "logs_v2")
     os.makedirs(logdir, exist_ok=True)
     suffix = f"_c{comp_frac:g}" if arm in ("comp", "fly") and comp_frac != COMP_FRAC else ""
+    if gate_k != GATE_K:
+        suffix += f"_g{gate_k:g}"
     if seed != 7:
         suffix += f"_s{seed}"
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_curve.jsonl"), "a",
               encoding="utf-8") as log:
-        res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac)
+        res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac,
+                      gate_k)
     avg_f = float(np.mean(list(res["forgetting"].values())))
     avg_i = float(np.mean(list(res["improvement"].values())))
     res["avg_forgetting"] = round(avg_f, 4)
     res["avg_improvement"] = round(avg_i, 4)
     res["comp_frac"] = comp_frac
+    res["gate_k"] = gate_k
     res["seed"] = seed
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_result.json"), "w") as f:
         json.dump(res, f, indent=1)
