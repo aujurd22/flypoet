@@ -1,0 +1,1 @@
+{"arm": "flynetS", "tag": "_L2k25", "k_frac": 0.25, "impl": "torch", "e_frac": 0.9, "d": 1280, "layers": 16, "seed": 7, "steps": 12000, "params_M": 333.9712}

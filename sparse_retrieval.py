@@ -48,8 +48,10 @@ def build(model, arr, positions):
 
 
 def topk_hits(qm, sm, qv, sv, k_list):
-    """Return hit@k lists for binary (Hamming) or float (cosine) matrices."""
-    if qm.dtype == torch.bool:
+    """Return hit@k index lists for binary (Hamming) or float (cosine) codes.
+    Hamming branch: qm/sm are boolean code matrices. Cosine branch: pass
+    qm=None and give qv/sv as dense float matrices."""
+    if qm is not None:
         d = (qm.sum(1, keepdim=True) + sm.sum(1).unsqueeze(0)
              - 2.0 * (qm.float() @ sm.float().T))       # Hamming (q, s)
     else:

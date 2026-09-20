@@ -1,0 +1,1 @@
+{"arm": "std", "tag": "_L2", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 1280, "layers": 16, "seed": 7, "steps": 12000, "params_M": 333.9712}

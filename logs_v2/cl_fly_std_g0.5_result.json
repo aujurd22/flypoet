@@ -1,0 +1,73 @@
+{
+ "arm": "fly",
+ "trunk": "std",
+ "history": [
+  {
+   "stage": 0,
+   "trained_on": null,
+   "evals": {
+    "news": 3.9366596817970274,
+    "dialogue": 4.247614574432373,
+    "law": 3.7498039960861207,
+    "technology": 3.5780919432640075
+   }
+  },
+  {
+   "stage": 1,
+   "trained_on": "news",
+   "evals": {
+    "news": 3.439626431465149,
+    "dialogue": 3.9611571073532104,
+    "law": 3.438219451904297,
+    "technology": 3.259641396999359
+   }
+  },
+  {
+   "stage": 2,
+   "trained_on": "dialogue",
+   "evals": {
+    "news": 3.5019049525260924,
+    "dialogue": 3.8185921788215635,
+    "law": 3.4981529116630554,
+    "technology": 3.2975221633911134
+   }
+  },
+  {
+   "stage": 3,
+   "trained_on": "law",
+   "evals": {
+    "news": 3.612456798553467,
+    "dialogue": 3.965301287174225,
+    "law": 1.6667747974395752,
+    "technology": 3.38692786693573
+   }
+  },
+  {
+   "stage": 4,
+   "trained_on": "technology",
+   "evals": {
+    "news": 3.5332160592079163,
+    "dialogue": 3.9685290694236754,
+    "law": 1.9216554045677186,
+    "technology": 3.1164857745170593
+   }
+  }
+ ],
+ "forgetting": {
+  "news": -0.0936,
+  "dialogue": -0.1499,
+  "law": -0.2549,
+  "technology": 0.0
+ },
+ "improvement": {
+  "news": 0.4034,
+  "dialogue": 0.2791,
+  "law": 1.8281,
+  "technology": 0.4616
+ },
+ "avg_forgetting": -0.1246,
+ "avg_improvement": 0.743,
+ "comp_frac": 0.3,
+ "gate_k": 0.5,
+ "seed": 7
+}
