@@ -79,3 +79,14 @@ python forgetting_shower.py                    # active-erasure shower
 ```
 
 Reports: REPORT_V2.md (three-arm study + sweep), REPORT_MEM.md (memory trilogy), NOTES_RLCD.md (methodology log, pre-registration, internal codenames).
+
+## 7. Addendum (2026-09-20)
+
+Four follow-ups strengthen and bound the claims: (a) the 25% sweet spot survives 4x the
+training data (48k steps: k-WTA 3.525 vs dense 3.546); (b) a third scale point (334M)
+is again won by k-WTA (+0.075 nats), showing the 216M inversion is an unstable
+data-starvation artifact rather than a monotone scale trend; (c) the surprise-gate
+threshold is a flat, tuning-free knob (forgetting 0.125-0.152 across K in [0.1, 0.5]);
+(d) k-WTA codes work as retrieval addresses - Hamming lookup beats frequency and random
+baselines by 2.5-4.8x - though not better than dense cosine, consistent with
+"index, not representation".
