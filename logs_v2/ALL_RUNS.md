@@ -6,6 +6,7 @@
 | flynetS_e75 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9622 | 82.9 | 0.715 | 0.3593 |
 | flynetS_e90 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9312 | 82.0 | 0.722 | 0.5846 |
 | flynetS_k02 | flynetS | 0.02 | None | None | None | 12000 | 92.6 | 4.1563 | 84.7 | 0.756 | None |
+| flynetS_k05 | flynetS | 0.05 | torch | 768 | 7 | 12000 | 92.6 | 3.9915 | 84.4 | 0.738 | None |
 | flynetS_k15 | flynetS | 0.15 | None | None | None | 12000 | 92.6 | 3.8596 | 85.3 | 0.738 | None |
 | flynetS_k25 | flynetS | 0.25 | None | None | None | 12000 | 92.6 | 3.8265 | 84.8 | 0.852 | None |
 | flynetS_k25_s8 | flynetS | 0.25 | torch | 768 | 8 | 12000 | 92.6 | 3.7997 | 76.5 | 0.73 | None |
