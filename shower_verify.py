@@ -22,7 +22,7 @@ import train_v2 as T
 
 DEV = "cuda"
 STEPS = 500
-BASES = ["std", "std_48k", "flynetS_k25_48k", "flynetS_adaptive"]
+BASES = sys.argv[1:] or ["std", "std_48k", "flynetS_k25_48k", "flynetS_adaptive"]
 
 
 @torch.no_grad()
@@ -64,9 +64,20 @@ def main():
         fp = os.path.join(ROOT, "logs_v2", f"{base}_model.pt")
         if not os.path.exists(fp):
             print(f"skip {base} (no ckpt)"); continue
+        # build the model with ITS OWN architecture/sparsity config —
+        # loading a sparse-trained checkpoint into a dense forward is a
+        # broken mode (elastic experiment: k25 weights collapse when run dense)
+        meta = json.load(open(os.path.join(ROOT, "logs_v2", f"{base}_final.json")))
+        kwta = None
+        if meta.get("impl") == "torch":
+            kwta = {"impl": "torch", "k_frac": meta.get("k_frac", 0.25)}
+        elif meta.get("impl") == "cuda":
+            kwta = {"impl": "cuda", "k_frac": meta.get("k_frac", 0.25)}
+        elif meta.get("impl") == "energy":
+            kwta = {"impl": "energy", "e_frac": meta.get("e_frac", 0.90)}
         entry = {}
         for variant in ["baseline", "decay10", "noise30"]:
-            model = T.GPT(corpus.V).to(DEV)
+            model = T.GPT(corpus.V, kwta_opts=kwta).to(DEV)
             sd = torch.load(fp, map_location=DEV, weights_only=True)
             model.load_state_dict(sd)
             model.train()
