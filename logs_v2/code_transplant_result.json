@@ -4,8 +4,8 @@
   "top1_flip": NaN
  },
  "zero_top25": {
-  "kl": 2.4262,
-  "top1_flip": 0.6175
+  "kl": 1.3147,
+  "top1_flip": 0.54
  },
  "zero_random25": {
   "kl": 0.7448,

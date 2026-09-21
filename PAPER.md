@@ -44,7 +44,7 @@ Sequential fine-tuning on four domains (news → dialogue → law → technology
 | compartments only | random 30% weight mask per domain | 0.380 | +0.451 |
 | **fly (gate+compartments)** | surprise gate: update only when batch loss > μ+0.25σ (EMA) | **0.143** | **+0.735** (best on all four domains) |
 
-A control isolating the representation: running *plain* fine-tuning on a k-WTA-trained trunk gives forgetting of 0.674 — statistically indistinguishable from dense. Sparse activation does not reduce interference; the protection comes from the write gate (a per-batch, surprise-adaptive early stop — the ML transliteration of "no surprise, no write") plus parameter compartmentalization.
+A control isolating the representation: running *plain* fine-tuning on a k-WTA-trained trunk gives forgetting of 0.674 — statistically indistinguishable from dense. A sharper control isolating the mechanism: a *random-skip* arm (same 30% compartment mask, same ~70% of batches skipped by coin flip instead of by surprise) matches the gate almost exactly (forgetting 0.130 vs 0.143, improvement +0.745 vs +0.735). The anti-forgetting effect is update *throttling* plus parameter compartmentalization — not selective, surprise-timed writing. Sparse activation does not reduce interference at all.
 
 ### 3.4 Active forgetting is a feature, if it is targeted
 
