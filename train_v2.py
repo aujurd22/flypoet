@@ -244,9 +244,14 @@ def main():
         was = model.training
         model.eval()
         try:
+            # FIXED val windows (seeded generator): same windows every call,
+            # removes eval-sampling noise from checkpoint comparisons
+            gen = torch.Generator().manual_seed(1234)
             ls = []
             for _ in range(24):
-                x, y = corpus.batches(corpus.val, 16, 256)
+                ix = torch.randint(len(corpus.val) - 256 - 1, (16,), generator=gen)
+                x = torch.stack([torch.from_numpy(corpus.val[i:i + 256]) for i in ix]).to(DEV)
+                y = torch.stack([torch.from_numpy(corpus.val[i + 1:i + 1 + 256]) for i in ix]).to(DEV)
                 with torch.autocast("cuda", dtype=torch.bfloat16):
                     _, l = model(x, y)
                 ls.append(l.item())
