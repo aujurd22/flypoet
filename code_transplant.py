@@ -50,7 +50,8 @@ def main():
             if mode in ("zero_top25", "keep_top25"):
                 thr = torch.kthvalue(h[..., -1, :], int(d * 0.75),
                                      dim=-1, keepdim=True).values
-                keep = h[..., -1, :] >= thr         # top-25% by value at last pos
+                top = h[..., -1, :] >= thr          # top-25% by value at last pos
+                keep = top if mode == "keep_top25" else ~top
             elif mode in ("keep_bottom75",):
                 keep = h[..., -1, :] < thr
             elif mode == "zero_random25":

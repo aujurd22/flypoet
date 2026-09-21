@@ -127,7 +127,7 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
     stage_losses = {}   # domain -> loss right after ITS stage
 
     for si, dom in enumerate(DOMAINS, start=1):
-        masks = comp_masks(model, si, comp_frac) if arm in ("comp", "fly") else None
+        masks = comp_masks(model, si, comp_frac) if arm in ("comp", "fly", "skip") else None
         mu = sigma = None
         mu_e = sigma_e = None
         n_onset, onset_ls, onset_e = 20, [], []
@@ -148,7 +148,10 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                 mu = 0.98 * mu + 0.02 * l
                 sigma = 0.98 * sigma + 0.02 * abs(l - mu)
             allow = True
-            if arm == "fly" and mu is not None:
+            if arm == "skip":
+                allow = bool(torch.rand(1).item() < 0.30)
+                gated += (not allow)
+            elif arm == "fly" and mu is not None:
                 if gate_type == "entropy":
                     with torch.no_grad():
                         pr = F.softmax(logits.float(), dim=-1)

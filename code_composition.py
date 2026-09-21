@@ -8,7 +8,8 @@ Metrics (top-25% codes at the position right after seeing the unit):
   m_self_x  Jaccard(code_xy, code_x)   x's own occurrence, one token earlier
   m_self_y  Jaccard(code_xy, code_y)   y alone (from other occurrences)
   m_union   Jaccard(code_xy, code_x ∪ code_y)
-  m_rand    Jaccard(code_xy, union of two frequency-matched random char codes)
+  m_rand    Jaccard(code_xy, union of two random char codes from the
+            same frequent pool (not frequency-matched — see caveat)
 Compositionality ratio = m_union / m_rand  (>1 means binding structure).
 """
 import json, os, sys
