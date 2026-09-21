@@ -1,39 +1,98 @@
-{"arm": "fly", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075}}
-{"arm": "fly", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075}}
-{"arm": "fly", "stage": 1, "domain": "news", "evals": {"news": 3.683873975276947, "dialogue": 4.082504487037658, "law": 3.600410044193268, "technology": 3.405187487602234}}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "evals": {"news": 3.6318102836608888, "dialogue": 3.9768736481666567, "law": 3.59374258518219, "technology": 3.3672998785972594}}
-{"arm": "fly", "stage": 3, "domain": "law", "evals": {"news": 3.697103273868561, "dialogue": 4.038994944095611, "law": 2.4777193784713747, "technology": 3.417546737194061}}
-{"arm": "fly", "stage": 4, "domain": "technology", "evals": {"news": 3.6145541310310363, "dialogue": 3.992903637886047, "law": 2.434471833705902, "technology": 3.291251313686371}}
-{"arm": "fly", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075}}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 200, "loss": 3.4376, "gate_pass": 0.27}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 400, "loss": 3.4821, "gate_pass": 0.3}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 600, "loss": 3.4859, "gate_pass": 0.313}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 800, "loss": 3.4864, "gate_pass": 0.329}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 1000, "loss": 3.4114, "gate_pass": 0.339}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 1200, "loss": 3.3019, "gate_pass": 0.345}
-{"arm": "fly", "stage": 1, "domain": "news", "step": 1400, "loss": 3.2991, "gate_pass": 0.347}
-{"arm": "fly", "stage": 1, "domain": "news", "evals": {"news": 3.4252493500709535, "dialogue": 3.9608158588409426, "law": 3.431027412414551, "technology": 3.2554190397262572}}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 200, "loss": 3.7711, "gate_pass": 0.395}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 400, "loss": 3.6058, "gate_pass": 0.363}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 600, "loss": 3.6314, "gate_pass": 0.362}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 800, "loss": 3.6739, "gate_pass": 0.363}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1000, "loss": 3.5699, "gate_pass": 0.362}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1200, "loss": 3.4412, "gate_pass": 0.37}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1400, "loss": 3.5878, "gate_pass": 0.371}
-{"arm": "fly", "stage": 2, "domain": "dialogue", "evals": {"news": 3.4999302983283997, "dialogue": 3.815686213970184, "law": 3.5057111978530884, "technology": 3.299264907836914}}
+{"arm": "fly", "trunk": "std", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075}}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 200, "loss": 3.437, "gate_pass": 0.27}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 400, "loss": 3.4826, "gate_pass": 0.3}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 600, "loss": 3.4853, "gate_pass": 0.313}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 800, "loss": 3.4852, "gate_pass": 0.329}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1000, "loss": 3.411, "gate_pass": 0.339}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1200, "loss": 3.3029, "gate_pass": 0.345}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1400, "loss": 3.3017, "gate_pass": 0.347}
+{"arm": "fly", "stage": 1, "domain": "news", "evals": {"news": 3.4254722476005552, "dialogue": 3.9610533118247986, "law": 3.432036030292511, "technology": 3.2554222464561464}}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 200, "loss": 3.7708, "gate_pass": 0.395}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 400, "loss": 3.6062, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 600, "loss": 3.6318, "gate_pass": 0.362}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 800, "loss": 3.6738, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1000, "loss": 3.5705, "gate_pass": 0.362}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1200, "loss": 3.4415, "gate_pass": 0.369}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1400, "loss": 3.5886, "gate_pass": 0.369}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "evals": {"news": 3.4999441146850585, "dialogue": 3.815826189517975, "law": 3.5052072644233703, "technology": 3.299430024623871}}
 {"arm": "fly", "stage": 3, "domain": "law", "step": 200, "loss": 2.0337, "gate_pass": 0.19}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 400, "loss": 1.8581, "gate_pass": 0.22}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 600, "loss": 1.7943, "gate_pass": 0.253}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 800, "loss": 1.5619, "gate_pass": 0.272}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 1000, "loss": 1.6808, "gate_pass": 0.28}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 1200, "loss": 1.5873, "gate_pass": 0.297}
-{"arm": "fly", "stage": 3, "domain": "law", "step": 1400, "loss": 1.6543, "gate_pass": 0.316}
-{"arm": "fly", "stage": 3, "domain": "law", "evals": {"news": 3.6234843134880066, "dialogue": 3.9789051175117494, "law": 1.6404266655445099, "technology": 3.402560603618622}}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 200, "loss": 3.0164, "gate_pass": 0.315}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 400, "loss": 1.8576, "gate_pass": 0.223}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 600, "loss": 1.7919, "gate_pass": 0.255}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 800, "loss": 1.5611, "gate_pass": 0.274}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1000, "loss": 1.6807, "gate_pass": 0.281}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1200, "loss": 1.5866, "gate_pass": 0.297}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1400, "loss": 1.654, "gate_pass": 0.317}
+{"arm": "fly", "stage": 3, "domain": "law", "evals": {"news": 3.623711276054382, "dialogue": 3.979512083530426, "law": 1.6405210554599763, "technology": 3.4022998452186584}}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 200, "loss": 3.0172, "gate_pass": 0.315}
 {"arm": "fly", "stage": 4, "domain": "technology", "step": 400, "loss": 3.0352, "gate_pass": 0.32}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 600, "loss": 2.7513, "gate_pass": 0.318}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 800, "loss": 2.7075, "gate_pass": 0.335}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 1000, "loss": 2.8342, "gate_pass": 0.337}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 1200, "loss": 2.6593, "gate_pass": 0.343}
-{"arm": "fly", "stage": 4, "domain": "technology", "step": 1400, "loss": 2.6149, "gate_pass": 0.339}
-{"arm": "fly", "stage": 4, "domain": "technology", "evals": {"news": 3.551153004169464, "dialogue": 3.990707290172577, "law": 1.9114604353904725, "technology": 3.120763671398163}}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 600, "loss": 2.7496, "gate_pass": 0.318}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 800, "loss": 2.71, "gate_pass": 0.335}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1000, "loss": 2.8349, "gate_pass": 0.334}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1200, "loss": 2.6646, "gate_pass": 0.338}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1400, "loss": 2.6163, "gate_pass": 0.335}
+{"arm": "fly", "stage": 4, "domain": "technology", "evals": {"news": 3.5487862706184385, "dialogue": 3.988883888721466, "law": 1.9090331494808197, "technology": 3.119381904602051}}
+{"arm": "fly", "trunk": "std", "stage": 0, "domain": null, "evals": {"news": 3.9366596817970274, "dialogue": 4.247614574432373, "law": 3.7498039960861207, "technology": 3.5780919432640075, "general": 4.048546278476715, "encyclopedia": 3.780189347267151, "education": 3.5566537857055662, "finance": 3.4828101873397825}}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 200, "loss": 3.4368, "gate_pass": 0.27}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 400, "loss": 3.4825, "gate_pass": 0.3}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 600, "loss": 3.4857, "gate_pass": 0.313}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 800, "loss": 3.4858, "gate_pass": 0.328}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1000, "loss": 3.4121, "gate_pass": 0.338}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1200, "loss": 3.3032, "gate_pass": 0.344}
+{"arm": "fly", "stage": 1, "domain": "news", "step": 1400, "loss": 3.3022, "gate_pass": 0.346}
+{"arm": "fly", "stage": 1, "domain": "news", "evals": {"news": 3.4256357312202455, "dialogue": 3.9608678936958315, "law": 3.431914484500885, "technology": 3.255627715587616, "general": 3.6966718554496767, "encyclopedia": 3.449972724914551, "education": 3.2208881258964537, "finance": 3.182395875453949}}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 200, "loss": 3.7711, "gate_pass": 0.395}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 400, "loss": 3.6065, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 600, "loss": 3.6318, "gate_pass": 0.362}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 800, "loss": 3.6737, "gate_pass": 0.363}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1000, "loss": 3.5703, "gate_pass": 0.362}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1200, "loss": 3.4417, "gate_pass": 0.369}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "step": 1400, "loss": 3.5878, "gate_pass": 0.369}
+{"arm": "fly", "stage": 2, "domain": "dialogue", "evals": {"news": 3.5000380992889406, "dialogue": 3.8156802654266357, "law": 3.503732132911682, "technology": 3.2987978577613832, "general": 3.690668249130249, "encyclopedia": 3.4864672303199766, "education": 3.2427449107170103, "finance": 3.1977531909942627}}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 200, "loss": 2.0336, "gate_pass": 0.19}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 400, "loss": 1.859, "gate_pass": 0.22}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 600, "loss": 1.7935, "gate_pass": 0.253}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 800, "loss": 1.5618, "gate_pass": 0.272}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1000, "loss": 1.6814, "gate_pass": 0.278}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1200, "loss": 1.5884, "gate_pass": 0.294}
+{"arm": "fly", "stage": 3, "domain": "law", "step": 1400, "loss": 1.6555, "gate_pass": 0.315}
+{"arm": "fly", "stage": 3, "domain": "law", "evals": {"news": 3.6237921357154845, "dialogue": 3.979060983657837, "law": 1.6410749554634094, "technology": 3.402039337158203, "general": 3.8198884606361387, "encyclopedia": 3.6076099634170533, "education": 3.3378381729125977, "finance": 3.2627060413360596}}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 200, "loss": 3.017, "gate_pass": 0.315}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 400, "loss": 3.0356, "gate_pass": 0.32}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 600, "loss": 2.7514, "gate_pass": 0.318}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 800, "loss": 2.7077, "gate_pass": 0.335}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1000, "loss": 2.8344, "gate_pass": 0.334}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1200, "loss": 2.6626, "gate_pass": 0.338}
+{"arm": "fly", "stage": 4, "domain": "technology", "step": 1400, "loss": 2.625, "gate_pass": 0.336}
+{"arm": "fly", "stage": 4, "domain": "technology", "evals": {"news": 3.5494303703308105, "dialogue": 3.988546061515808, "law": 1.9108176410198212, "technology": 3.119627261161804, "general": 3.7304282069206236, "encyclopedia": 3.4985652446746824, "education": 3.2451683640480042, "finance": 3.054205572605133}}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 200, "loss": 3.569, "gate_pass": 0.4}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 400, "loss": 3.3494, "gate_pass": 0.37}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 600, "loss": 3.5593, "gate_pass": 0.38}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 800, "loss": 3.5189, "gate_pass": 0.381}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 1000, "loss": 3.4517, "gate_pass": 0.383}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 1200, "loss": 3.2205, "gate_pass": 0.38}
+{"arm": "fly", "stage": 5, "domain": "general", "step": 1400, "loss": 3.2939, "gate_pass": 0.386}
+{"arm": "fly", "stage": 5, "domain": "general", "evals": {"news": 3.438992977142334, "dialogue": 3.870597207546234, "law": 2.0105340421199798, "technology": 3.1036120295524596, "general": 3.5650598287582396, "encyclopedia": 3.394719350337982, "education": 3.1774882912635802, "finance": 2.9938979387283324}}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 200, "loss": 3.2696, "gate_pass": 0.43}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 400, "loss": 3.2371, "gate_pass": 0.39}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 600, "loss": 3.0719, "gate_pass": 0.395}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 800, "loss": 3.2181, "gate_pass": 0.394}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 1000, "loss": 3.1014, "gate_pass": 0.396}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 1200, "loss": 2.887, "gate_pass": 0.389}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "step": 1400, "loss": 3.0351, "gate_pass": 0.39}
+{"arm": "fly", "stage": 6, "domain": "encyclopedia", "evals": {"news": 3.426944923400879, "dialogue": 3.9167858958244324, "law": 2.1036478638648988, "technology": 3.090899181365967, "general": 3.5755332946777343, "encyclopedia": 3.3172863960266112, "education": 3.168033981323242, "finance": 2.985129725933075}}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 200, "loss": 3.1692, "gate_pass": 0.375}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 400, "loss": 2.9995, "gate_pass": 0.358}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 600, "loss": 2.7828, "gate_pass": 0.35}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 800, "loss": 2.8109, "gate_pass": 0.349}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 1000, "loss": 2.7446, "gate_pass": 0.351}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 1200, "loss": 2.7713, "gate_pass": 0.353}
+{"arm": "fly", "stage": 7, "domain": "education", "step": 1400, "loss": 2.755, "gate_pass": 0.36}
+{"arm": "fly", "stage": 7, "domain": "education", "evals": {"news": 3.4672125697135927, "dialogue": 3.94841947555542, "law": 2.181043928861618, "technology": 3.1358633995056153, "general": 3.6313434720039366, "encyclopedia": 3.3829213857650755, "education": 3.025495433807373, "finance": 3.0722728967666626}}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 200, "loss": 2.7687, "gate_pass": 0.37}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 400, "loss": 2.821, "gate_pass": 0.36}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 600, "loss": 2.4352, "gate_pass": 0.362}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 800, "loss": 2.5186, "gate_pass": 0.38}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 1000, "loss": 2.2875, "gate_pass": 0.383}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 1200, "loss": 2.3401, "gate_pass": 0.382}
+{"arm": "fly", "stage": 8, "domain": "finance", "step": 1400, "loss": 2.4623, "gate_pass": 0.384}
+{"arm": "fly", "stage": 8, "domain": "finance", "evals": {"news": 3.5274241089820864, "dialogue": 4.025386452674866, "law": 2.2312493443489076, "technology": 3.1564162015914916, "general": 3.67933474779129, "encyclopedia": 3.4507787823677063, "education": 3.1772600769996644, "finance": 2.4793821454048155}}

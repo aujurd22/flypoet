@@ -1,5 +1,6 @@
 {
  "arm": "fly",
+ "trunk": "std",
  "history": [
   {
    "stage": 0,
@@ -8,62 +9,149 @@
     "news": 3.9366596817970274,
     "dialogue": 4.247614574432373,
     "law": 3.7498039960861207,
-    "technology": 3.5780919432640075
+    "technology": 3.5780919432640075,
+    "general": 4.048546278476715,
+    "encyclopedia": 3.780189347267151,
+    "education": 3.5566537857055662,
+    "finance": 3.4828101873397825
    }
   },
   {
    "stage": 1,
    "trained_on": "news",
    "evals": {
-    "news": 3.4252493500709535,
-    "dialogue": 3.9608158588409426,
-    "law": 3.431027412414551,
-    "technology": 3.2554190397262572
+    "news": 3.4256357312202455,
+    "dialogue": 3.9608678936958315,
+    "law": 3.431914484500885,
+    "technology": 3.255627715587616,
+    "general": 3.6966718554496767,
+    "encyclopedia": 3.449972724914551,
+    "education": 3.2208881258964537,
+    "finance": 3.182395875453949
    }
   },
   {
    "stage": 2,
    "trained_on": "dialogue",
    "evals": {
-    "news": 3.4999302983283997,
-    "dialogue": 3.815686213970184,
-    "law": 3.5057111978530884,
-    "technology": 3.299264907836914
+    "news": 3.5000380992889406,
+    "dialogue": 3.8156802654266357,
+    "law": 3.503732132911682,
+    "technology": 3.2987978577613832,
+    "general": 3.690668249130249,
+    "encyclopedia": 3.4864672303199766,
+    "education": 3.2427449107170103,
+    "finance": 3.1977531909942627
    }
   },
   {
    "stage": 3,
    "trained_on": "law",
    "evals": {
-    "news": 3.6234843134880066,
-    "dialogue": 3.9789051175117494,
-    "law": 1.6404266655445099,
-    "technology": 3.402560603618622
+    "news": 3.6237921357154845,
+    "dialogue": 3.979060983657837,
+    "law": 1.6410749554634094,
+    "technology": 3.402039337158203,
+    "general": 3.8198884606361387,
+    "encyclopedia": 3.6076099634170533,
+    "education": 3.3378381729125977,
+    "finance": 3.2627060413360596
    }
   },
   {
    "stage": 4,
    "trained_on": "technology",
    "evals": {
-    "news": 3.551153004169464,
-    "dialogue": 3.990707290172577,
-    "law": 1.9114604353904725,
-    "technology": 3.120763671398163
+    "news": 3.5494303703308105,
+    "dialogue": 3.988546061515808,
+    "law": 1.9108176410198212,
+    "technology": 3.119627261161804,
+    "general": 3.7304282069206236,
+    "encyclopedia": 3.4985652446746824,
+    "education": 3.2451683640480042,
+    "finance": 3.054205572605133
+   }
+  },
+  {
+   "stage": 5,
+   "trained_on": "general",
+   "evals": {
+    "news": 3.438992977142334,
+    "dialogue": 3.870597207546234,
+    "law": 2.0105340421199798,
+    "technology": 3.1036120295524596,
+    "general": 3.5650598287582396,
+    "encyclopedia": 3.394719350337982,
+    "education": 3.1774882912635802,
+    "finance": 2.9938979387283324
+   }
+  },
+  {
+   "stage": 6,
+   "trained_on": "encyclopedia",
+   "evals": {
+    "news": 3.426944923400879,
+    "dialogue": 3.9167858958244324,
+    "law": 2.1036478638648988,
+    "technology": 3.090899181365967,
+    "general": 3.5755332946777343,
+    "encyclopedia": 3.3172863960266112,
+    "education": 3.168033981323242,
+    "finance": 2.985129725933075
+   }
+  },
+  {
+   "stage": 7,
+   "trained_on": "education",
+   "evals": {
+    "news": 3.4672125697135927,
+    "dialogue": 3.94841947555542,
+    "law": 2.181043928861618,
+    "technology": 3.1358633995056153,
+    "general": 3.6313434720039366,
+    "encyclopedia": 3.3829213857650755,
+    "education": 3.025495433807373,
+    "finance": 3.0722728967666626
+   }
+  },
+  {
+   "stage": 8,
+   "trained_on": "finance",
+   "evals": {
+    "news": 3.5274241089820864,
+    "dialogue": 4.025386452674866,
+    "law": 2.2312493443489076,
+    "technology": 3.1564162015914916,
+    "general": 3.67933474779129,
+    "encyclopedia": 3.4507787823677063,
+    "education": 3.1772600769996644,
+    "finance": 2.4793821454048155
    }
   }
  ],
  "forgetting": {
-  "news": -0.1259,
-  "dialogue": -0.175,
-  "law": -0.271,
-  "technology": 0.0
+  "news": -0.1018,
+  "dialogue": -0.2097,
+  "law": -0.5902,
+  "technology": -0.0368,
+  "general": -0.1143,
+  "encyclopedia": -0.1335,
+  "education": -0.1518,
+  "finance": 0.0
  },
  "improvement": {
-  "news": 0.3855,
-  "dialogue": 0.2569,
-  "law": 1.8383,
-  "technology": 0.4573
+  "news": 0.4092,
+  "dialogue": 0.2222,
+  "law": 1.5186,
+  "technology": 0.4217,
+  "general": 0.3692,
+  "encyclopedia": 0.3294,
+  "education": 0.3794,
+  "finance": 1.0034
  },
- "avg_forgetting": -0.143,
- "avg_improvement": 0.7345
+ "avg_forgetting": -0.1673,
+ "avg_improvement": 0.5816,
+ "comp_frac": 0.3,
+ "gate_k": 0.25,
+ "seed": 7
 }

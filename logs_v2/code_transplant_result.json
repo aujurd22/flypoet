@@ -3,16 +3,20 @@
   "kl": NaN,
   "top1_flip": NaN
  },
+ "zero_top25": {
+  "kl": 2.4262,
+  "top1_flip": 0.6175
+ },
+ "zero_random25": {
+  "kl": 0.7448,
+  "top1_flip": 0.385
+ },
  "keep_top25": {
   "kl": 2.4262,
   "top1_flip": 0.6175
  },
- "keep_bottom75": {
-  "kl": 1.3147,
-  "top1_flip": 0.54
- },
  "random25": {
-  "kl": 3.9624,
-  "top1_flip": 0.7725
+  "kl": 3.8099,
+  "top1_flip": 0.75
  }
 }

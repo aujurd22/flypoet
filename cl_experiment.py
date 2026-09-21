@@ -214,6 +214,8 @@ def main():
     seed = int(sys.argv[5]) if len(sys.argv) > 5 else 7
     gate_k = float(sys.argv[6]) if len(sys.argv) > 6 else GATE_K
     gate_type = sys.argv[8] if len(sys.argv) > 8 else "loss"
+    batch = int(sys.argv[9]) if len(sys.argv) > 9 else BATCH
+    globals()['BATCH'] = batch
     global DOMAINS
     if len(sys.argv) > 7 and sys.argv[7]:
         DOMAINS = tuple(sys.argv[7].split(","))

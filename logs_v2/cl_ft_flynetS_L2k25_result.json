@@ -1,0 +1,67 @@
+{
+ "arm": "ft",
+ "trunk": "flynetS_L2k25",
+ "history": [
+  {
+   "stage": 0,
+   "trained_on": null,
+   "evals": {
+    "news": 5.502270007133484,
+    "dialogue": 5.70986053943634,
+    "law": 5.453982138633728,
+    "technology": 5.037794518470764
+   }
+  },
+  {
+   "stage": 1,
+   "trained_on": "news",
+   "evals": {
+    "news": 4.607784271240234
+   }
+  },
+  {
+   "stage": 2,
+   "trained_on": "dialogue",
+   "evals": {
+    "news": 4.70953221321106,
+    "dialogue": 4.832393217086792
+   }
+  },
+  {
+   "stage": 3,
+   "trained_on": "law",
+   "evals": {
+    "news": 4.939280033111572,
+    "dialogue": 5.139492988586426,
+    "law": 2.2260209143161775
+   }
+  },
+  {
+   "stage": 4,
+   "trained_on": "technology",
+   "evals": {
+    "news": 4.670799469947815,
+    "dialogue": 5.035713720321655,
+    "law": 2.8486512184143065,
+    "technology": 4.0977486848831175
+   }
+  }
+ ],
+ "forgetting": {
+  "news": -0.063,
+  "dialogue": -0.2033,
+  "law": -0.6226,
+  "technology": 0.0
+ },
+ "improvement": {
+  "news": 0.8315,
+  "dialogue": 0.6741,
+  "law": 2.6053,
+  "technology": 0.94
+ },
+ "avg_forgetting": -0.2222,
+ "avg_improvement": 1.2627,
+ "comp_frac": 0.3,
+ "gate_k": 0.25,
+ "seed": 7
+}

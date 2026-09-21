@@ -108,7 +108,7 @@ def main():
                                     for i in range(len(models[a]))])), 4)
     for a, b in [("flynetS_k25_s8", "flynetS_k25_s9")]:
         if a in models and b in models:
-            out[f"elite_overlap_{a}_vs_{b}"] = overlap(a, b)
+            results[f"elite_overlap_{a}_vs_{b}"] = overlap(a, b)
     with open(os.path.join(ROOT, "logs_v2", "elite_census_result.json"), "w") as f:
         json.dump(results, f, indent=1)
     print("saved logs_v2/elite_census_result.json", flush=True)

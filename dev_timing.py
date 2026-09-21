@@ -21,7 +21,8 @@ OCC = 4
 def main():
     tag = sys.argv[1] if len(sys.argv) > 1 else "flynetS_k25_snap"
     corpus = T.Corpus()
-    snaps = sorted(int(f.split("snap")[1].split(".")[0])
+    import re
+    snaps = sorted(int(re.search(r"snap(\d+)\.pt$", f).group(1))
                    for f in os.listdir(os.path.join(ROOT, "logs_v2"))
                    if f.startswith(f"{tag}_snap") and f.endswith(".pt"))
     if not snaps:

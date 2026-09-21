@@ -13,6 +13,7 @@
 | flynetS_k40 | flynetS | 0.4 | None | None | None | 12000 | 92.6 | 3.8501 | 83.1 | 0.774 | None |
 | flynetS_k50 | flynetS | 0.5 | torch | 768 | 7 | 12000 | 92.6 | 3.8726 | 82.2 | 0.773 | None |
 | flynetS_k60 | flynetS | 0.6 | None | None | None | 12000 | 92.6 | 3.8991 | 81.0 | 0.765 | None |
+| flynetS_snap | flynetS | 0.25 | torch | 768 | 7 | 12000 | 92.6 | 3.8278 | 83.8 | 0.739 | None |
 | std_s8 | std | 0.1 | None | 768 | 8 | 12000 | 92.6 | 3.8415 | 80.2 | 0.717 | None |
 | std_s9 | std | 0.1 | None | 768 | 9 | 12000 | 92.6 | 3.8777 | 84.1 | 0.73 | None |
 | std_sleep | std | 0.1 | None | 768 | 7 | 12000 | 92.6 | 3.8964 | 83.1 | 0.71 | None |
