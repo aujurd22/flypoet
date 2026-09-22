@@ -149,7 +149,7 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                 sigma = 0.98 * sigma + 0.02 * abs(l - mu)
             allow = True
             if arm == "skip":
-                allow = bool(torch.rand(1).item() < 0.30)
+                allow = bool(torch.rand(1).item() < (1.0 - gate_k))
                 gated += (not allow)
             elif arm == "fly" and mu is not None:
                 if gate_type == "entropy":

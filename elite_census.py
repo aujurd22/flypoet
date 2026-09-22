@@ -82,6 +82,9 @@ def main():
             kwta = {"impl": "torch", "k_frac": m["k_frac"]}
         elif m.get("impl") == "cuda":
             kwta = {"impl": "cuda", "k_frac": m["k_frac"]}
+        if kwta is None:
+            print(f"skip {tag} (dense model — no winners to census)", flush=True)
+            continue
         model = T.GPT(corpus.V, d=d, layers=layers, heads=heads,
                       ffn_h=ffn_h, kwta_opts=kwta).to(DEV)
         sd = torch.load(os.path.join(ROOT, "logs_v2", f"{tag}_model.pt"),

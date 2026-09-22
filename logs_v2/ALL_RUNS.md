@@ -19,12 +19,15 @@
 | std_sleep | std | 0.1 | None | 768 | 7 | 12000 | 92.6 | 3.8964 | 83.1 | 0.71 | None |
 | std_sleep_s8 | std | 0.1 | None | 768 | 8 | 12000 | 92.6 | 3.8396 | 79.4 | 0.705 | None |
 | std_sleep_s9 | std | 0.1 | None | 768 | 9 | 12000 | 92.6 | 3.88 | 82.0 | 0.742 | None |
+| flynetS_Lb8k25 | flynetS | 0.25 | torch | 1024 | 7 | 12000 | 215.8 | 4.855 | 64.7 | 0.73 | None |
 | flynetS_Lk25 | flynetS | 0.25 | torch | 1024 | 7 | 12000 | 215.8 | 4.3198 | 78.0 | 0.738 | None |
 | std_L | std | 0.1 | None | 1024 | 7 | 12000 | 215.8 | 4.1813 | 80.4 | 0.769 | None |
+| std_Lb8 | std | 0.1 | None | 1024 | 7 | 12000 | 215.8 | 4.87 | 62.7 | 0.708 | None |
 | flynetS_L2k25 | flynetS | 0.25 | torch | 1280 | 7 | 12000 | 334.0 | 5.1907 | 66.0 | 0.717 | None |
 | std_L2 | std | 0.1 | None | 1280 | 7 | 12000 | 334.0 | 5.2657 | 63.9 | 0.738 | None |
+| std_XL | std | 0.1 | None | 1536 | 7 | 12000 | 477.8 | 5.4736 | 48.0 | 0.726 | None |
 | flynetS | flynetS | None | None | None | None | 24000 | 92.6 | 3.6613 | 84.2 | 0.789 | None |
-| flynetS_adaptive | flynetS_adaptive | None | None | None | None | 24000 | 92.6 | 3.6597 | 82.5 | 0.751 | None |
+| flynetS_adaptive | flynetS_adaptive | 0.1 | cuda | 768 | None | 24000 | 92.6 | 3.6597 | 82.5 | 0.751 | None |
 | flynetS_k25_24k | flynetS | 0.25 | None | None | None | 24000 | 92.6 | 3.6351 | 81.9 | 0.734 | None |
 | std | std | None | None | None | None | 24000 | 92.6 | 3.6731 | 80.7 | 0.756 | None |
 | flynetS_k25_48k | flynetS | 0.25 | torch | 768 | 7 | 48000 | 92.6 | 3.5254 | 72.2 | 0.76 | None |

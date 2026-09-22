@@ -1,0 +1,11 @@
+{
+ "checkpoint": "flynetS_k25_24k",
+ "n_store": 4000,
+ "n_query": 960,
+ "hamming_topic_hit1": 0.325,
+ "cosine_topic_hit1": 0.3417,
+ "hamming_topic_hit10": 0.8823,
+ "cosine_topic_hit10": 0.8812,
+ "hamming_topic_hit50": 0.9969,
+ "cosine_topic_hit50": 0.9969
+}
