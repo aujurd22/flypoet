@@ -1,0 +1,16 @@
+{
+ "full_cos32_s": 0.05,
+ "full_cos32_hit1": 0.349,
+ "full_cos32_hit10": 0.8417,
+ "full_hamming_s": 1.817,
+ "full_hamming_hit1": 0.35,
+ "full_hamming_hit10": 0.85,
+ "two_stage_M100_s": 0.236,
+ "two_stage_M100_hit1": 0.35,
+ "two_stage_M100_hit10": 0.8354,
+ "two_stage_M500_s": 1.774,
+ "two_stage_M500_hit1": 0.35,
+ "two_stage_M500_hit10": 0.8406,
+ "codebook_bytes_per_entry": 96,
+ "dense32_bytes_per_entry": 3072
+}
