@@ -1,92 +1,87 @@
-# What the Fruit Fly Teaches a Small Language Model: Sparse Activation, Gated Memory Writes, and Active Forgetting
+# What Survives When Fruit-Fly Memory Mechanisms Are Transplanted into a Language Model?
 
-*FlyPoet working paper — consolidated from REPORT_V2.md and REPORT_MEM.md. All experiments: 92.6M char-level GPT (RoPE / RMSNorm / SwiGLU / SDPA) on Chinese literary text, single consumer GPU. Code in this repository; every number below is reproducible from the committed scripts and curves.*
+*FlyPoet working paper, v2 — 2026-09-23. Consolidates ~30 controlled experiments across five model scales (92.6M–478M), all char-level Chinese-literature LMs trained from scratch on one consumer GPU. Every number is reproducible from committed scripts; three of our own earlier claims were retracted after stronger controls and are reported as such.*
 
 ## Abstract
 
-We transplant three mechanisms of the Drosophila mushroom body into a small transformer language model and test each against pre-registered baselines. (1) Winner-take-all channel sparsification (k-WTA) accelerates convergence: at mid-training the sparse model is calibrated and accurate while the dense baseline is neither, though dense catches up given 2× the training. A sparsity sweep (9 points) shows the gain is U-shaped — keeping 25% of channels beats dense at every checkpoint we measured, while 2% clearly hurts. (2) Fly-style *memory management* — per-task parameter compartments plus an update gate that skips most batches — reduces catastrophic forgetting by ~79% in sequential domain fine-tuning, while sparse activation *per se* does not help at all; a random-skip control shows the benefit comes from updating less often, not from surprise selectivity. (3) A data-free "forgetting shower" (targeted decay of low-magnitude weights) was initially reported to remove the late-training overfitting tail; a fixed-validation-window re-verification shows its true effect is zero across four base checkpoints — the original observation was evaluation noise (the random protocol swings ±0.06 on an unchanged function). The uniform-decay control destroying the model stands, but only as the trivial statement that scaling all weights by 0.6 is harmful. We also report a familiarity probe (set-level contamination detection AUC 0.93, single-window weak) and three negative results. We argue the productive import of the fly for language models is not sparse representation alone but the management of *when to write, what to keep, and when to erase*.
+We transplant four Drosophila mushroom-body mechanisms into a small transformer language model and audit, with pre-registered criteria and matched controls, which ones survive. (1) *Sparse competition* (winner-take-all channel activation, trained in from scratch): a nine-point sweep finds a U-shaped optimum near 25% kept channels that beats dense by ~0.08 nats; the advantage holds across three seeds, four clean scale points (92.6M–477.8M), and a 4× data increase — with one configuration-bound exception we dissect. Trained-in sparse codes turn out to be *causally load-bearing* (matched-fraction ablation does 1.76× more damage than random) and function as *topic-level addresses* (2.6× chance), while remaining semantically silent and developmentally frozen (cross-snapshot stability 0.45→0.89 while code–PMI correlation stays at 0.03). (2) *Gated memory writes*: restricting fine-tuning updates cuts catastrophic forgetting by ~80%, but a random-skip control shows the benefit is entirely update *throttling* — surprise selectivity adds nothing measurable. (3) *Active forgetting*: a targeted low-magnitude decay initially appeared to repair an overfit tail; a fixed-window re-verification shows the true effect is zero and the observation was evaluation noise. (4) *Parameter compartments* contribute little beyond the throttle. The surviving story is austere: of the fly's mechanisms, what transfers is not sparse *representation* but conservative *memory management* — write less, partition parameters, and never forget uniformly.
 
-## 1. Background
+## 1. Why transplant, and what to expect
 
-The Drosophila mushroom body achieves sparse, high-dimensional coding: an odor activates ~5% of Kenyon cells, patterns are high-dimensional and decorrelated, dopaminergic neurons gate memory writes by prediction error, memories are compartmentalized, and dedicated neurons actively erase memories. Each of these has an obvious machine-learning analogue, and each invites the same question: does it help a language model?
-
-Prior sparse-activation work in ML (MoE, sparse attention) sparsifies computation; the fly's sparsification is of *representation*. This project keeps a dense transformer compute path and sparsifies the channel activation pattern after attention, measuring the effect on language modeling, calibration, continual learning, and training stability. We are careful throughout to distinguish channel-sparse *activation* from token-sparse *attention* — nothing here changes which tokens attend to which.
+The Drosophila mushroom body is the best-characterized memory system in neuroscience: ~2,000 Kenyon cells (KCs) sparsify odor input through winner-take-all competition, dopaminergic neurons gate plasticity by prediction error, learned associations are compartmentalized, and dedicated circuitry actively erases memories. Each mechanism has an obvious machine-learning analogue, and "bio-inspired" papers routinely report that one of them helps. We ask a harder question: **when each mechanism is given a matched control, which benefits survive?** The answer, across ~30 experiments, is a strict subset of what the bio-inspiration suggests — and knowing which parts die is as useful as knowing which live.
 
 ## 2. Setup
 
-Char-level GPT, 92.6M parameters (d=768, 12 layers, 12 heads, SwiGLU ffn=2048), RoPE, RMSNorm, tied embeddings; corpus: Chinese literary text (~0.9B tokens training stream, `data_v2`); AdamW + OneCycle; batch 24 × 256 tokens; 12k-step main protocol, 24k-step extension. k-WTA is applied to the attention output of every block: keep top-k channels by value (exact), by an online-adaptive threshold (CUDA kernel), or by an energy criterion. Three arms by default: `std` (dense), `flynetS` (exact top-k, k=10% unless swept), `flynetS_adaptive`.
-
-Pre-registered judgment criteria (fixed before the 12k run, in NOTES_RLCD.md): sample efficiency at 2k, representation health (effective rank), collapse warning (distinct-3), and calibration (ECE/top-1 on next-char confidence).
+Char-level GPT, 92.6M parameters (d=768, 12 layers, 12 heads, SwiGLU-2048, RoPE, RMSNorm, tied embeddings), Chinese literary corpus (~0.9B-token stream); AdamW + OneCycle; main protocol 12k steps (batch 24×256), extensions to 24k/48k; scale ladder to 216M/334M/478M (d=1024–1536). k-WTA is applied to each block's attention output: keep the top-k channels by value, with k a training-time constant unless stated. All validation comparisons in this version use a **fixed validation-window protocol** (seeded generator) after we discovered the original random 24-batch protocol swings ±0.06 nats on an unchanged function — enough to fabricate effects of the size we care about.
 
 ## 3. Results
 
-### 3.1 Calibration looked like a free lunch, and wasn't
+### 3.1 Sparsity: a robust U-shaped sweet spot, not a fly constant
 
-At 12k steps both k-WTA arms were dramatically better calibrated than dense: top-1 next-char accuracy 0.31–0.33 vs 0.08–0.10, ECE 0.042–0.049 vs 0.094, overconfidence gap ≈ 0 vs +0.09 (3 evaluation seeds × 400 windows, consistent across seeds). At 24k the dense model caught up on both accuracy (0.365 vs 0.368) and calibration. The surviving claim is *convergence acceleration*: k-WTA reaches the "accurate and calibrated" state with roughly half the training. We consider this correction the most important methodological output of the project: a single-checkpoint advantage over an undertrained baseline is the calibration analogue of testing on the training set.
+Nine-point sweep at 92.6M (12k steps): 2%→4.156, 5%→3.992, 10%→3.889, 15%→3.860, **25%→3.827**, 40%→3.850, 50%→3.873, 60%→3.899, dense→3.906. Moderate sparsity beats dense at every checkpoint measured, across three seeds (k25 3.819±0.016 vs dense 3.875±0.027, 3/3 seed wins), and across a 4× data increase (48k steps: 3.525 vs 3.546). The advantage peaks at the largest matched pair we ran (478M, 12.3M tokens: +0.090).
 
-### 3.2 The sparsity gain is U-shaped, with a sweet spot near 25%
+The early-calibration story corrected itself: at 12k the sparse arms looked dramatically better calibrated (top-1 accuracy 0.31–0.33 vs 0.08–0.10, ECE roughly halved); by 24k dense caught up on both. We therefore claim *convergence speedup and a mid-training advantage*, not a permanent calibration gain — the original observation came from comparing against an undertrained baseline.
 
-Sweeping only the keep fraction (12k steps, everything else fixed):
+### 3.2 The one inversion is configuration-bound
 
-| keep | 2% | 10% | 15% | **25%** | 40% | 60% | dense |
-|---|---|---|---|---|---|---|---|
-| val loss | 4.156 | 3.889 | 3.860 | **3.827** | 3.850 | 3.899 | 3.906 |
+At 216M under the original protocol (batch 16, 393M tokens), k25 *lost* to dense by 0.139 — the only reversal anywhere in the project. Rerunning the same scale under the standard batch-8 protocol (24.6M tokens) erases it (dense 4.870 vs k25 4.855). The elite-channel census adds a structural lead: the inverted point has the most concentrated win-rate distribution of any scale (Gini 0.578 vs 0.50–0.57). We do not claim causation; we claim the inversion is real but *configuration-bound*, and that sparsity optima are a function of (scale, data, schedule) rather than an architecture constant. The fly's ~5% KC sparsity does not transfer as a number.
 
-Moderate sparsity beats dense everywhere we measured; the optimum is near 25% (≈192 of 768 channels per block), not the 5–10% suggested by biology alone. Extending the 25% arm to 24k keeps it ahead (3.635 vs 3.673 dense and 3.661 @10%), with the lead narrowing from 0.079 to 0.038 nats — part convergence speedup, part persistent edge. Distinct-3 and effective rank stay healthy in all arms; sparse arms run slightly slower in wall-clock (kthvalue overhead; the "savings" are in effective computation, not FLOPs).
+### 3.3 Continual learning: throttling and compartments, not surprise
 
-### 3.3 Memory management, not sparse representation, prevents forgetting
+Sequential fine-tuning on four domains (1500 steps each) from the 24k dense checkpoint: plain FT forgets 0.692 nats, and two of four domains show *zero or negative* improvement over the never-finetuned base. Adding a surprise gate (update only when batch loss exceeds a running noise floor μ+0.25σ, EMA) plus random 30% parameter compartments cuts forgetting to 0.143 and turns all four domains positive (+0.735 mean).
 
-Sequential fine-tuning on four domains (news → dialogue → law → technology, 1500 steps each, from the dense 24k checkpoint):
+Three controls dissect this:
+- **Sparse trunk, plain FT**: 0.674 — sparse representation alone does nothing for interference.
+- **Compartments only** (no gate): 0.380.
+- **Random-skip** (same compartments, coin-flip batch skipping at the gate's pass rate): **0.130 / +0.745 vs the gate's 0.143 / +0.735** — statistically indistinguishable.
 
-| arm | mechanism | avg forgetting ↓ | avg improvement over base |
-|---|---|---|---|
-| plain fine-tune | none | 0.692 | **−0.170** (3 of 4 domains worse than never fine-tuning) |
-| compartments only | random 30% weight mask per domain | 0.380 | +0.451 |
-| **fly (gate+compartments)** | surprise gate: update only when batch loss > μ+0.25σ (EMA) | **0.143** | **+0.735** (best on all four domains) |
+The verdict: the benefit is *update throttling plus parameter partitioning*. "Write only when surprised" — the most biological-looking part — adds nothing measurable over a coin flip at matched budget. A dose-response over pass rates (15/30/50/90%) is cleanly monotone and the gate sits on the curve. An entropy-gate variant (no targets needed) matches the loss gate, so the throttle transfers to unlabeled streams. Boundary: on a heavily undertrained 334M base, everything is surprising, the gate degenerates to pass-through, and plain FT overtakes it (+1.26 vs +0.98) — gating requires a base with a meaningful prediction baseline.
 
-A control isolating the representation: running *plain* fine-tuning on a k-WTA-trained trunk gives forgetting of 0.674 — statistically indistinguishable from dense. A sharper control isolating the mechanism: a *random-skip* arm (same 30% compartment mask, same ~70% of batches skipped by coin flip instead of by surprise) matches the gate almost exactly (forgetting 0.130 vs 0.143, improvement +0.745 vs +0.735). The anti-forgetting effect is update *throttling* plus parameter compartmentalization — not selective, surprise-timed writing. Sparse activation does not reduce interference at all.
+### 3.4 Active forgetting: retracted
 
-### 3.4 Active forgetting is a feature, if it is targeted
+Our initial report claimed 500 data-free steps of low-magnitude decay repair an overfit tail (3.65→3.59) while uniform decay destroys the model (→6.60). The destruction is real (100+ evaluation sigma); the *repair* was not — under fixed validation windows the shower's effect is exactly zero across four base checkpoints (max |Δ| 0.002), while the original random protocol swings ±0.06 on an unchanged function. No active-erasure benefit is currently demonstrated in this setup.
 
-RETRACTED after fixed-window re-verification (`shower_verify.py`): on deterministic validation windows the shower's effect is exactly zero across four base checkpoints (max |Δ| 0.002), while the original random 24-batch protocol swings ±0.06 on an unchanged function — the reported 3.651→3.588 recovery was sampling noise. Matched uniform decay driving val to 6.60 stands, but only as the trivial statement that scaling all weights by 0.6 is harmful. No active-erasure benefit is currently demonstrated in this setup.
+### 3.5 What the sparse code is — and is not
 
-### 3.5 Familiarity: the model knows what it has seen, set-level
+A five-part characterization of the trained k25 code (top-25% channels of the final hidden state):
+1. **Stable**: same-char codes across independent contexts overlap 1.5× more than different-char pairs.
+2. **Compositional (provisionally)**: bigram codes overlap the union of their char codes 1.67× more than random pairs from the same frequent-char pool (caveat: the baseline is pool-uniform, not frequency-matched).
+3. **Causally load-bearing**: matched-fraction ablation of the code channels does 1.76× more damage (KL) than random-25% ablation.
+4. **A topic address**: Hamming lookup over an address book retrieves same-domain neighbours at 2.6× chance (hit@1 0.325), tying dense cosine.
+5. **Not semantic, developmentally frozen**: code–PMI correlation is 0.03 (dense: 0.21) and never develops; cross-snapshot code stability rises 0.45→0.89 over training. The address system freezes; semantics never enter.
+6. **Elite structure without elite identity**: channel win-rates are concentrated (Gini 0.50–0.58, rising with scale; the inversion point is the most concentrated), but cross-seed elite overlap is at chance (6.7% vs 6.5% expected).
 
-A tiny probe on the trained model separates training-stream windows from held-out windows with AUC 0.93 at the set level (~50+ windows suffice to answer "was this evaluation set contaminated?"), while single windows are weak (AUC ≈ 0.59; recall at 5% contamination ≈ 2× random). The memorization signature in loss space is real (train windows NLL 3.53 vs val 3.72) but individually faint at this scale. Notably, sparsification does *not* reduce memorization (signature slightly stronger in the k-WTA model).
+### 3.6 Further negatives
 
-### 3.6 Negative results (reported in full)
+k-WTA probe on frozen Qwen3-0.6B features loses to a linear probe (0.570 vs 0.642) — the mechanism must be trained in. A single-window contamination detector built from four trace features (NLL, activation rate, max-NLL, bigram score) does not beat NLL alone (ensemble 0.517 vs 0.605); set-level detection (AUC 0.93) remains the only usable mode. Per-token activation rate carries no seen/unseen signal (OOD AUC 0.5005). Inference-time elasticity shows the trained model tolerates *reducing* k gracefully (+0.05 nats at 10%) but collapses when *increasing* it (k=100% is worse than chance) — weights co-adapt to exactly one sparsity.
 
-- **k-WTA probe on frozen features loses**: on frozen Qwen3-0.6B representations, a k-WTA probe (0.570) underperforms a linear probe (0.642) on 8-way domain routing. The fly mechanisms must be present during representation formation; post-hoc sparsification does nothing good.
-- **Sparse per se ≠ less forgetting** (§3.3 control).
-- **"Free calibration gain" was an undertraining artifact** (§3.1 correction).
+## 4. What survives
 
-## 4. What we think is going on
-
-The three positive results share one shape: the fly mechanisms that help are the ones that *manage* a dense computation — gating writes, erasing selectively, spending activation budget where it pays (the U-shaped sweep's optimum away from both extremes) — rather than the ones that merely change the representation's statistics. A dense transformer trained normally already learns good representations; what it lacks is an institutional memory policy. The fly, facing the same problem with 100k neurons, evolved the policy first.
+| Mechanism | Verdict | Effect |
+|---|---|---|
+| Write throttling | **survives** | −80% forgetting; dose-response monotone; surprise selectivity adds nothing |
+| Parameter compartments | **survives (secondary)** | +0.45 improvement without gate; small beyond throttle with it |
+| Trained-in 25% sparsity | **survives** | beats dense at 4 clean scale points; U-shaped; elastic downward only |
+| Targeted (non-uniform) forgetting | **open** | repair claim retracted; "band decay is a no-op, uniform decay destroys" stands |
+| Surprise selectivity | **dies** | random-skip control |
+| Sparse code as semantic representation | **dies** | PMI 0.03; retrieval ties dense |
+| Sparse code as address/index | **lives (partial)** | stable, completable, causal, topic-level 2.6× |
+| Fly-derived sparsity constants (5%) | **dies** | optimum is regime-dependent; 25% here |
 
 ## 5. Limitations
 
-Single seed for the sweep and scale experiments (multi-seed replication of the 25% point is in progress); 92.6M–225M scale only, char-level, one language and corpus; wall-clock not yet improved (channel sparsity here costs a sort/threshold per block); continual-learning protocol uses one domain order; and "convergence acceleration" claims rest on 12k-vs-24k checkpoints rather than fitted learning curves.
+Char-level, Chinese-only, single architecture family; scale ladder tops out at 478M with 12.3M–74M tokens (all points are data-starved by Chinchilla standards — which is the regime we study, but the sweet spot's behavior in data-rich regimes is untested); CL protocols use one domain order and one seed for most arms (two seeds for the headline comparisons); the shower retraction rests on a fixed-window protocol adopted after the fact; the compositionality baseline is pool-uniform rather than frequency-matched.
 
 ## 6. Reproducing
 
 ```bash
 python train_v2.py --arm std --steps 24000
 python train_v2.py --arm flynetS --kfrac 0.25 --tag _k25 --steps 12000
-python cl_experiment.py fly 1500 std          # gated CL arm
-python fam_nll.py                              # familiarity / contamination
-python forgetting_shower.py                    # active-erasure shower
+python cl_experiment.py fly 1500 std          # gated continual learning
+python cl_experiment.py skip 1500 std         # random-skip control
+python shower_verify.py                       # fixed-window shower audit
+python code_address.py && python sparse_retrieval.py && python domain_retrieval.py
+python calibration_eval.py --arm std --model logs_v2/std_model.pt --seed 0
 ```
 
-Reports: REPORT_V2.md (three-arm study + sweep), REPORT_MEM.md (memory trilogy), NOTES_RLCD.md (methodology log, pre-registration, internal codenames).
-
-## 7. Addendum (2026-09-20)
-
-Four follow-ups strengthen and bound the claims: (a) the 25% sweet spot survives 4x the
-training data (48k steps: k-WTA 3.525 vs dense 3.546); (b) a third scale point (334M)
-is again won by k-WTA (+0.075 nats), showing the 216M inversion is an unstable
-data-starvation artifact rather than a monotone scale trend; (c) the surprise-gate
-threshold is a flat, tuning-free knob (forgetting 0.125-0.152 across K in [0.1, 0.5]);
-(d) k-WTA codes work as retrieval addresses - Hamming lookup beats frequency and random
-baselines by 2.5-4.8x - though not better than dense cosine, consistent with
-"index, not representation".
+Reports: REPORT_V2.md (three-arm study, sweep, scale ladder), REPORT_MEM.md (memory trilogy, follow-ups, retractions), NOTES_RLCD.md (pre-registration and full methodology log).
