@@ -33,6 +33,8 @@
 | flynetS_adaptive | flynetS_adaptive | 0.1 | cuda | 768 | None | 24000 | 92.6 | 3.6597 | 82.5 | 0.751 | None |
 | flynetS_k25_24k | flynetS | 0.25 | None | None | None | 24000 | 92.6 | 3.6351 | 81.9 | 0.734 | None |
 | std | std | None | None | None | None | 24000 | 92.6 | 3.6731 | 80.7 | 0.756 | None |
+| flynetS_XL24k25 | flynetS | 0.25 | torch | 1536 | 7 | 24000 | 477.8 | 5.3059 | 67.5 | 0.793 | None |
+| std_XL24 | std | 0.1 | None | 1536 | 7 | 24000 | 477.8 | 5.4861 | 55.0 | 0.694 | None |
 | flynetS_k25_48k | flynetS | 0.25 | torch | 768 | 7 | 48000 | 92.6 | 3.5254 | 72.2 | 0.76 | None |
 | std_48k | std | 0.1 | None | 768 | 7 | 48000 | 92.6 | 3.546 | 71.8 | 0.76 | None |
 .76 | None |

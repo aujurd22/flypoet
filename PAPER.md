@@ -18,7 +18,7 @@ Char-level GPT, 92.6M parameters (d=768, 12 layers, 12 heads, SwiGLU-2048, RoPE,
 
 ### 3.1 Sparsity: a robust U-shaped sweet spot, not a fly constant
 
-Nine-point sweep at 92.6M (12k steps): 2%→4.156, 5%→3.992, 10%→3.889, 15%→3.860, **25%→3.827**, 40%→3.850, 50%→3.873, 60%→3.899, dense→3.906. Moderate sparsity beats dense at every checkpoint measured, across three seeds (k25 3.819±0.016 vs dense 3.875±0.027, 3/3 seed wins), and across a 4× data increase (48k steps: 3.525 vs 3.546). The advantage peaks at the largest matched pair we ran (478M, 12.3M tokens: +0.090).
+Nine-point sweep at 92.6M (12k steps): 2%→4.156, 5%→3.992, 10%→3.889, 15%→3.860, **25%→3.827**, 40%→3.850, 50%→3.873, 60%→3.899, dense→3.906. Moderate sparsity beats dense at every checkpoint measured, across three seeds (k25 3.819±0.016 vs dense 3.875±0.027, 3/3 seed wins), and across a 4× data increase (48k steps: 3.525 vs 3.546). The advantage peaks at the largest scale and grows with data there: at 478M, doubling the token budget from 12.3M to 24.6M *doubles* the gap (from +0.090 to +0.180 nats) — the opposite of the shrink-with-data pattern seen at 92.6M.
 
 The early-calibration story corrected itself: at 12k the sparse arms looked dramatically better calibrated (top-1 accuracy 0.31–0.33 vs 0.08–0.10, ECE roughly halved); by 24k dense caught up on both. We therefore claim *convergence speedup and a mid-training advantage*, not a permanent calibration gain — the original observation came from comparing against an undertrained baseline.
 
