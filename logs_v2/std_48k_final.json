@@ -1,1 +1,1 @@
-{"arm": "std", "tag": "_48k", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 768, "layers": 12, "seed": 7, "steps": 48000, "params_M": 92.635392}
+{"arm": "std", "tag": "_48k", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 768, "layers": 12, "seed": 7, "steps": 48000, "params_M": 92.635392, "batch": 24, "seq_len": 256, "tokens": 294912000, "optimizer": "AdamW", "schedule": "OneCycle"}

@@ -1,1 +1,1 @@
-{"arm": "flynetS", "tag": "_k60", "k_frac": 0.6, "steps": 12000, "params_M": 92.635392}
+{"arm": "flynetS", "tag": "_k60", "k_frac": 0.6, "steps": 12000, "params_M": 92.635392, "batch": 24, "seq_len": 256, "tokens": 73728000, "optimizer": "AdamW", "schedule": "OneCycle"}

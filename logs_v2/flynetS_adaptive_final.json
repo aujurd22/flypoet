@@ -1,1 +1,1 @@
-{"arm": "flynetS_adaptive", "steps": 24000, "params_M": 92.635392, "impl": "cuda", "k_frac": 0.1, "d": 768, "layers": 12, "heads": 12, "ffn_h": 2048}
+{"arm": "flynetS_adaptive", "steps": 24000, "params_M": 92.635392, "impl": "cuda", "k_frac": 0.1, "d": 768, "layers": 12, "heads": 12, "ffn_h": 2048, "batch": 24, "seq_len": 256, "tokens": 147456000, "optimizer": "AdamW", "schedule": "OneCycle"}

@@ -1,1 +1,1 @@
-{"arm": "flynetS", "steps": 24000, "params_M": 92.635392}
+{"arm": "flynetS", "steps": 24000, "params_M": 92.635392, "batch": 24, "seq_len": 256, "tokens": 147456000, "optimizer": "AdamW", "schedule": "OneCycle"}

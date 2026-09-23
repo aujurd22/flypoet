@@ -1,1 +1,1 @@
-{"arm": "std", "tag": "_Lb8", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 1024, "layers": 16, "heads": 16, "ffn_h": 2816, "seed": 7, "steps": 12000, "params_M": 215.796736}
+{"arm": "std", "tag": "_Lb8", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 1024, "layers": 16, "heads": 16, "ffn_h": 2816, "seed": 7, "steps": 12000, "params_M": 215.796736, "batch": 8, "seq_len": 256, "tokens": 24576000, "optimizer": "AdamW", "schedule": "OneCycle"}

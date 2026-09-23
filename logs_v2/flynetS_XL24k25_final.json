@@ -1,1 +1,1 @@
-{"arm": "flynetS", "tag": "_XL24k25", "k_frac": 0.25, "impl": "torch", "e_frac": 0.9, "d": 1536, "layers": 16, "heads": 16, "ffn_h": 4224, "seed": 7, "steps": 24000, "params_M": 477.835776}
+{"arm": "flynetS", "tag": "_XL24k25", "k_frac": 0.25, "impl": "torch", "e_frac": 0.9, "d": 1536, "layers": 16, "heads": 16, "ffn_h": 4224, "seed": 7, "steps": 24000, "params_M": 477.835776, "batch": 4, "seq_len": 256, "tokens": 24576000, "optimizer": "AdamW", "schedule": "OneCycle"}
