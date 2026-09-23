@@ -341,6 +341,9 @@ def main():
                "impl": kwta_opts["impl"] if kwta_opts else None,
                "e_frac": args.e_frac, "d": args.d, "layers": args.layers,
                "heads": args.heads, "ffn_h": args.ffn_h,
+               "batch": args.batch, "seq_len": 256,
+               "tokens": args.steps * args.batch * 256,
+               "optimizer": "AdamW", "schedule": "OneCycle",
                "seed": args.seed, "steps": args.steps, "params_M": nparam / 1e6},
               open(os.path.join(ROOT, "logs_v2", f"{name}_final.json"), "w"))
     print(f"[{name}] DONE", flush=True)

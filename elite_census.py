@@ -40,11 +40,11 @@ def census(model, corpus, d, k):
             p = int(torch.randint(len(corpus.val) - SEQ - 1, (1,)))
             x = torch.from_numpy(corpus.val[p:p + SEQ]).unsqueeze(0).to(DEV)
             h = corpus_emb(model, x)
+            total += h[0].shape[0]                  # T once per window (not per layer)
             for li, block_h in enumerate(h):        # block_h: (T, d)
                 top = torch.topk(block_h, k, dim=-1).indices.reshape(-1)
                 cnt = torch.bincount(top, minlength=d).cpu().numpy()
                 counts[li] += cnt
-                total += block_h.shape[0]
     return counts / total
 
 
