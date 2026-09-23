@@ -24,7 +24,7 @@ The early-calibration story corrected itself: at 12k the sparse arms looked dram
 
 ### 3.2 The one inversion is configuration-bound
 
-At 216M under the original protocol (batch 16, 393M tokens), k25 *lost* to dense by 0.139 — the only reversal anywhere in the project. Rerunning the same scale under the standard batch-8 protocol (24.6M tokens) erases it (dense 4.870 vs k25 4.855). The elite-channel census adds a structural lead: the inverted point has the most concentrated win-rate distribution of any scale (Gini 0.578 vs 0.50–0.57). We do not claim causation; we claim the inversion is real but *configuration-bound*, and that sparsity optima are a function of (scale, data, schedule) rather than an architecture constant. The fly's ~5% KC sparsity does not transfer as a number.
+At 216M under the original protocol (batch 16, 393M tokens), k25 *lost* to dense by 0.139 — the only reversal anywhere in the project. Rerunning the same scale under the standard batch-8 protocol (24.6M tokens) erases it (dense 4.870 vs k25 4.855); note the original pair is internally batch-matched at 49M tokens. The elite-channel census adds a structural lead: the inverted point has the most concentrated win-rate distribution of any scale (Gini 0.578 vs 0.50–0.57). We do not claim the batch size is the cause; we claim the sign of the k25-vs-dense gap *flips with the training configuration at this scale* (−0.139 at 49M tokens/batch 16, +0.015 at 24.6M/batch 8), that both points are internally consistent far beyond evaluation noise, and that the mechanism is genuinely unresolved. Resolving it is the primary target of the scale×budget grid. The fly's ~5% KC sparsity does not transfer as a number.
 
 ### 3.3 Continual learning: throttling and compartments, not surprise
 
