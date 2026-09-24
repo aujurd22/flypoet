@@ -1,0 +1,16 @@
+{
+ "zero_own": {
+  "kl": 1.3147,
+  "top1_flip": 0.54
+ },
+ "zero_mismatch": {
+  "kl": 1.0916,
+  "top1_flip": 0.46
+ },
+ "zero_random": {
+  "kl": 0.8939,
+  "top1_flip": 0.4775
+ },
+ "ratio_own_vs_random": 1.471,
+ "ratio_own_vs_mismatch": 1.204
+}
