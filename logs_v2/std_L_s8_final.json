@@ -1,0 +1,1 @@
+{"arm": "std", "tag": "_L_s8", "k_frac": 0.1, "impl": null, "e_frac": 0.9, "d": 1024, "layers": 16, "heads": 16, "ffn_h": 2816, "batch": 16, "seq_len": 256, "tokens": 49152000, "optimizer": "AdamW", "schedule": "OneCycle", "seed": 8, "steps": 12000, "params_M": 215.796736}
