@@ -16,7 +16,8 @@ import train_v2 as T
 
 DEV = "cuda"
 SEQ = 192
-PER_LABEL = 500          # store per label
+import sys as _sys
+PER_LABEL = int(_sys.argv[2]) if len(_sys.argv) > 2 else 500  # store per label
 Q_PER_LABEL = 120        # query per label
 
 
