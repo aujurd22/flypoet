@@ -69,13 +69,21 @@ class KWTA(nn.Module):
       'torch'  exact top-k keep
       'cuda'   adaptive threshold (Krotov-Hopfield style)
       'energy' keep the smallest channel set holding e_frac of |x| energy
-               (graded, per-token budget — no fixed keep rate)"""
-    def __init__(self, k_frac, impl="torch", e_frac=0.90):
+               (graded, per-token budget — no fixed keep rate)
+    selector (torch impl only):
+      'magnitude' keep top-k channels by value (default; competitive WTA)
+      'random'    keep a fresh random k-subset per forward (capacity control,
+                  no competition)
+      'fixed'     keep one fixed channel subset for ALL inputs (stable random
+                  subset, registered at init — static capacity, no dynamics)"""
+    def __init__(self, k_frac, impl="torch", e_frac=0.90, selector="magnitude"):
         super().__init__()
         self.k_frac = k_frac
         self.impl = impl
         self.e_frac = e_frac
+        self.selector = selector
         self._cuda_fn = None
+        self._fixed_mask = None
         self.last_keep = None      # tensor: mean keep fraction, set in forward
 
     def forward(self, x):
@@ -101,6 +109,18 @@ class KWTA(nn.Module):
             keep = mag >= thr
             self.last_keep = keep.detach().float().mean()
             return (xf * keep).to(in_dtype)
+        if self.selector == "random":
+            # fresh random k-subset per (B,T) position — capacity without competition
+            noise = torch.rand(x.shape[:-1] + (d,), device=x.device)
+            thr = torch.kthvalue(noise, d - k + 1, dim=-1, keepdim=True).values
+            return x * (noise >= thr)
+        if self.selector == "fixed":
+            if self._fixed_mask is None or self._fixed_mask.shape[0] != d:
+                g = torch.Generator().manual_seed(42)
+                self._fixed_mask = (torch.rand(d, generator=g) < self.k_frac)
+                if self._fixed_mask.sum() == 0:
+                    self._fixed_mask[0] = True
+            return x * self._fixed_mask.to(x.device)
         thr = torch.kthvalue(x, d - k + 1, dim=-1, keepdim=True).values
         return x * (x >= thr)
 
@@ -121,7 +141,8 @@ class Block(nn.Module):
         if kwta_opts:
             self.kwta = KWTA(kwta_opts.get("k_frac", 0.10),
                              impl=kwta_opts.get("impl", "torch"),
-                             e_frac=kwta_opts.get("e_frac", 0.90))
+                             e_frac=kwta_opts.get("e_frac", 0.90),
+                             selector=kwta_opts.get("selector", "magnitude"))
         else:
             self.kwta = None
         self.register_buffer("cos", cos, persistent=False)
@@ -198,6 +219,9 @@ def main():
                     help="k-WTA channel keep fraction (sparsity sweep)")
     ap.add_argument("--impl", choices=["torch", "cuda", "energy"], default=None,
                     help="override k-WTA implementation")
+    ap.add_argument("--selector", choices=["magnitude", "random", "fixed"],
+                    default="magnitude",
+                    help="channel-selection rule for the torch k-WTA impl")
     ap.add_argument("--e_frac", type=float, default=0.90,
                     help="energy target for impl=energy")
     ap.add_argument("--seed", type=int, default=7)
@@ -222,7 +246,8 @@ def main():
     kwta_opts = None
     if args.arm in ("flynetS", "flynetS_adaptive"):
         impl = args.impl or ("cuda" if args.arm == "flynetS_adaptive" else "torch")
-        kwta_opts = {"impl": impl, "k_frac": args.kfrac, "e_frac": args.e_frac}
+        kwta_opts = {"impl": impl, "k_frac": args.kfrac, "e_frac": args.e_frac,
+                     "selector": args.selector}
     model = GPT(corpus.V, d=args.d, layers=args.layers, heads=args.heads,
                 ffn_h=args.ffn_h, kwta_opts=kwta_opts).to(DEV)
     nparam = sum(p.numel() for p in model.parameters())
@@ -339,6 +364,7 @@ def main():
     torch.save(model.state_dict(), os.path.join(ROOT, "logs_v2", f"{name}_model.pt"))
     json.dump({"arm": args.arm, "tag": args.tag, "k_frac": args.kfrac,
                "impl": kwta_opts["impl"] if kwta_opts else None,
+               "selector": args.selector if kwta_opts else None,
                "e_frac": args.e_frac, "d": args.d, "layers": args.layers,
                "heads": args.heads, "ffn_h": args.ffn_h,
                "batch": args.batch, "seq_len": 256,
