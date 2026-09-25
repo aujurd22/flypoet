@@ -197,3 +197,44 @@ FlyPoet 反其道——**用 Transformer 的实际最优（25%）对照生物常
 
 果蝇嗅觉回路（稀疏随机投影+KC 去相关）→ **预训练模型的持续表示学习**：渐进去相关、训练时间大降、性能匹敌或超 SOTA CL 方法，代码在 GitHub。
 **与 FlyPoet 的边界**：他们 = 预训练 backbone + 表征去相关 + 效率；我们 = 从头训练 + 通道 WTA + 匹配对照 + 码身份。不撞车，但 related work 必引（同果蝇灵感+同持续学习方向）。正确 arXiv 号待查（此前猜号两次落空，改用标题搜索验证）。
+
+## 块 6：Gated Attention + Diff Transformer 深度定位（20:5x-21:1x 检索）
+
+### [Gated Attention (Qiu et al., NeurIPS 2025)](https://arxiv.org/abs/2505.06708)
+
+- 30 种 gated-attention 变体系统比较后收敛到：`O' = σ(g(X)) ⊙ SDPA(X)`
+- **gating position 消融**：门控在 **attention output（O）** 最优；直接门控 value（V）退化
+- **规模效应**：0.5B-8B 的消融显示 gate 主要惠及更长训练与更大规模——**我们 92.6M 上 sigmoid≈top-k 的打平可能在小规模才成立**
+- 额外收益：训练稳定（loss spike 消除）、容忍更高学习率、消除 attention sink
+- **与 FlyPoet 的关系**：我们的 sigmoid 臂（3.823 ≈ top-k 3.827）独立复现了"gating 不输 hard selection"，但规模效应（gating 在更大模型上是否反超）未验证
+
+### [Differential Transformer (Ye et al., 2024)](https://arxiv.org/abs/2410.05258)
+
+- `A = softmax(Q₁K₁ᵀ) − λ·softmax(Q₂K₂ᵀ)`，减去两个 attention map 消除噪声
+- 437+ 引用，改善长上下文、关键信息检索、ICL、幻觉缓解
+- **与 FlyPoet 的镜像关系**：他们在 token-attention 维消噪声→稀疏注意模式；我们在 channel 维竞争→稀疏通道——**同一个"抑制→稀疏"原理的不同维度实现**
+- **SDT（Sparse Differential Transformer）**：top-K 稀疏掩码 + 差分注意力已有人组合（人脸聚类）——但 channel 级 WTA + 差分的组合仍空白
+
+### 三轴统一框架（评审建议 + 文献补全后）
+
+| 轴 | 机制 | 代表 | FlyPoet 状态 |
+|---|---|---|---|
+| Selection（选谁传播） | Top-k / Random / Fixed / Sigmoid | FlyPoet 四臂 | ✅ 已完成：稳定子集=活性成分 |
+| Inhibition（抑制噪声） | 差分注意力 | Diff Transformer | 未做 |
+| Memory（外部/内部记忆） | 码簿 / Hopfield / SDM | flymemory + SDMLP | 部分完成（检索✅/训练投影❌） |
+| Gating（门控权重） | σ(g)⊙O / k-WTA | Gated Attention / FlyPoet | sigmoid 臂已测，大规模未验 |
+
+→ **缺失的四轴交叉**：gating × inhibition（σ 门 + 差分通道）在 channel 维的组合——文献空白。
+
+## 块 7：GitHub 仓库 + k-WTA scaling laws 检索结论（01:3x）
+
+**结论：无直接竞品仓库。** "k-WTA scaling laws for transformers" 没有找到专门论文——
+FlyPoet 的规模阶梯（五规模 × 匹配对 × 剂量曲线）在这个方向保持空白。
+最接近的仓库/论文：
+- [WTACRS (NeurIPS)](https://github.com/zirui-ray-liu/WTACRS/)：WTA 采样用于 LM 适配
+- [400 activation functions survey (Kunc & Klezl 2024)](https://arxiv.org/pdf/2402.09092)：k-WTA 激活函数收录（对抗鲁棒性用途）
+- [ContinualAI papers 列表](https://github.com/ContinualAI/continual-learning-papers)：343+ CL 论文
+- [Awesome-Forgetting-in-Deep-Learning](https://github.com/EnnengYang/Awesome-Forgetting-in-Deep-Learning)：子空间 CL 方法目录
+- [Awesome-SNN](https://github.com/TheBrainLab/Awesome-Spiking-Neural-Networks)：脉冲神经网络稀疏方法
+
+→ flypoet 的空位保持：**trained-in WTA + Transformer + 匹配对照 + 码身份 + 跨规模**五件套仓库不存在。
