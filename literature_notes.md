@@ -238,3 +238,51 @@ FlyPoet 的规模阶梯（五规模 × 匹配对 × 剂量曲线）在这个方�
 - [Awesome-SNN](https://github.com/TheBrainLab/Awesome-Spiking-Neural-Networks)：脉冲神经网络稀疏方法
 
 → flypoet 的空位保持：**trained-in WTA + Transformer + 匹配对照 + 码身份 + 跨规模**五件套仓库不存在。
+
+## 块 8：attention sink → 幻觉 → 内部信号（03:5x 检索，高度活跃的 2025-26 前沿）
+
+**发现：attention sink → 激活异常 → 幻觉的链路是 2025-26 的热门方向**：
+
+| 工作 | 关键发现 |
+|---|---|
+| [SinkProbe (Binkowski et al., ICLR 2026)](https://arxiv.org/html/2604.10697v1) | 幻觉溯源至 attention sink 分数捕获的内部信息流崩塌——SinkProbe = 检测方法 |
+| [Anatomy of Massive Activations (Sun et al., 2026)](https://ui.adsabs.harvard.edu/abs/2026arXiv260305498S/abstract) | attention sink 局部调制跨头注意力输出、偏置头向短程依赖 |
+| [Enhancing Shallow Layers (EMNLP 2025)](https://aclanthology.org/2025.emnlp-main.174.pdf) | 幻觉与图像 token 的 attention sink 模式密切关联，浅层稠密 sink 行为 |
+| [Enhancing Attention Heads (arXiv 2411.09968)](https://arxiv.org/html/2411.09968v1) | **稀疏 attention sink 易产生幻觉，dense sink 头不易** |
+| [Attention Sinks: Catch-Tag-Release (NeurIPS 2025)](https://neurips.cc/virtual/2025/poster/115812) | LLM 把注意力集中在少数 token（如第一个 token） |
+
+**与 FlyPoet 的关联**：
+1. **k-WTA 强制通道稀疏**——如果稀疏 attention sink 易幻觉，我们的 k25 模型是否也更易幻觉？
+   这是一个可检验的预测（用真实文本对照困惑度+域检索实验间接评估）；
+2. 反面：如果 k25 模型的幻觉率**不高于** dense（因为码是因果承载的稳定子集，不是 sink 式
+   的信息流崩塌），那就是**稀疏结构的抗幻觉证据**——项目级正面结果；
+3. SinkProbe 方法论可借鉴：用内部信号（attention scores）做检测，而非输出层面——
+   与我们的码分析（用内部激活做检索/因果消融）同一方法学家族。
+
+## 块 9：博客/从业者/最近邻生物计算（04:1x 检索）
+
+**最有价值的发现：[Zahn et al., PLOS Comp Biol——"Pruning deep neural networks generates a sparse, bio-inspired network"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1010512)**
+- 直接把 DNN 剪枝与果蝇蘑菇体的稀疏高维编码对接
+- **与 FlyPoet 最近**：他们从"剪枝产生稀疏"出发，我们从"训练时强加稀疏"出发——
+  同一果蝇 MB 对接的两种方法（后验涌现 vs 先验强加）
+- PLOS Comp Biol 期刊（非预印本），framing 面向从业者
+
+**其它**：
+- [DevFly (NeurIPS 2022)](https://proceedings.neurips.cc/paper_files/paper/2022/file/0fed4ca757f63257370f456def09d3eb-Paper-Conference.pdf)：MB 的发育过程模拟（稀疏连接的生物发育→模型初始化）
+- [Nolta 2026](https://epapers2.org/nolta2026/ESR/paper_details.php?paper_id=9253)：昆虫 MB 的视觉路线导航（稀疏编码+简单突触可塑性）
+- [SNN 视觉导航 (Frontiers 2024)](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2024.1379977/full)：SNN 学习复杂自然视觉场景（引用 23）
+- [MB gap junction sparse reward (PMC 2024)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11152299)：间隙连接网络的稀疏奖励学习
+- 博客/教程极度稀缺：唯一 [tinyML EMEA 2021 视频](https://www.youtube.com/watch?v=aHHlBFqS99Y)
+  （神经形态电路），从业者级教程空缺——**flypoet 的 README 恰好可以填补这个生态位**
+
+## 文献综述完成度评估（01:2x→03:2x 检索+2 深读+1 撤回核实）
+
+| 主题块 | 覆盖度 | 空白确认 |
+|---|---|---|
+| WTA/sparse activation in LM | ✅ 充分（10+ 论文） | 无撞车 |
+| SDM/HDC 地址理论 | ✅ 充分（VaCoAl 深读+经典谱系） | 交叉空白（码来自 LM 内部） |
+| 随机子集 vs 幅值选择理论 | ✅ 充分（RePr/LTH/干扰理论） | 通道级空白 |
+| CL 选择性可塑性 | ✅ 充分（MIST/UPGD/Lässig/Doicare） | 批次轴对照空白（我们的贡献） |
+| attention sink→幻觉 | ✅ 2025-26 活跃前沿 | 稀疏训练模型幻觉率未测 |
+| 博客/从业者 | ⚠️ 极度稀缺 | flypoet README 可填补 |
+| GitHub 仓库 | ✅ 无竞品 | flypoet 空位保持 |
