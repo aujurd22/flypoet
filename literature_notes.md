@@ -286,3 +286,22 @@ FlyPoet 的规模阶梯（五规模 × 匹配对 × 剂量曲线）在这个方�
 | attention sink→幻觉 | ✅ 2025-26 活跃前沿 | 稀疏训练模型幻觉率未测 |
 | 博客/从业者 | ⚠️ 极度稀缺 | flypoet README 可填补 |
 | GitHub 仓库 | ✅ 无竞品 | flypoet 空位保持 |
+
+## 块 10：稀疏 × 安全 × 可解释性（03:3x 检索，意外发现的新维度）
+
+**2025-26 的一个意外趋势：稀疏/剪枝不再只是压缩——它直接改变安全行为。**
+
+| 工作 | 发现 |
+|---|---|
+| [CHESS](https://arxiv.org) | 通道阈值+选择性稀疏化（训练-free 激活稀疏推理） |
+| [AAPP (2025-11)](https://arxiv.org) | 对齐约束的动态剪枝→拒绝率提高 50%（同计算量） |
+| "Pruning Boosts LLM Safety" | WANDA 在中等稀疏度（10-20%）反而**降低**安全拒绝行为 |
+| [SAE Robustness](https://www.alphaxiv.org) | SAE 作为可解释性工具有鲁棒性缺口 |
+| [Activation Approximations → Safety Vulnerabilities (2025-02)](https://arxiv.org) | 激活近似引入安全漏洞（不同于权重剪枝） |
+
+**与 FlyPoet 的关联**：
+1. **k-WTA 是"结构性可解释"的**——每层固定 25% 通道、可数、可追踪；
+   对照 dense 模型的 SAE 事后解释，k-WTA 的解释是**原生的**；
+2. **安全-稀疏交互是未探索的**：我们的 k25 是否影响安全对齐？
+   0.5B 级模型的拒绝行为在 k25 vs dense 下是否不同？（未来实验）
+3. **CHESS 的通道阈值方法与我们的 k-WTA 同族**（training-free vs trained-in 的区别）。
