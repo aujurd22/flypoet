@@ -1,48 +1,141 @@
 # flypoet
 
-The fruit fly mushroom body does sparse coding with a winner-take-all rule (k-WTA): a stimulus lights up a small subset of Kenyon cells and silences the rest. This repo puts fly-derived mechanisms — sparse competition, gated memory writes, parameter compartments, active forgetting — into small language models and measures, with controls, what each one actually does.
+这个仓库回答一个具体的问题：**果蝇蘑菇体的记忆机制，搬到语言模型里之后，哪些是真的有用，哪些只是听起来有用？**
 
-Short version after ~20 experiments: **the fly mechanisms that survive controls are memory-management mechanisms (write less, partition parameters, erase selectively), not representation improvements.**
+果蝇解决这个问题的方式和 Transformer 完全不同。它没有梯度下降，没有反向传播，2,000 个左右的 Kenyon 细胞用"赢家通吃"的方式稀疏编码气味，多巴胺神经元决定要不要写入记忆，学过的东西放在不同的"小室"里互不干扰，还有专门的神经通路负责主动遗忘。我们把这些机制逐个做成机器学习的对应物，塞进一个从零训练的小语言模型，然后给每个机制配一个它应得的对照组——看哪个能活下来。
 
-## Setup
+结论先说：**活下来的不是"稀疏表示让模型更聪明"，而是几条关于"如何管理学习和记忆"的工程规律。**具体是哪几条、怎么证明的、哪些我们自己的漂亮假说死在了对照组手里，下面完整讲。
 
-A 92.6M-parameter char-level GPT (RoPE / RMSNorm / SwiGLU / SDPA) trained on Chinese literary text, scaled to 216M / 334M for boundary tests. Fly mechanisms under test:
+## 实验平台
 
-- `flynetS` — exact top-k channel sparsification after attention (~25% kept at the sweet spot)
-- `flynetS_adaptive` — same with an online-adapting threshold in a CUDA kernel
-- surprise-gated continual learning — update weights only when batch loss exceeds a running noise floor, into random parameter compartments
-- forgetting shower — data-free decay of low-magnitude weights
+基础模型是 92.6M 参数的 char-level GPT（RoPE / RMSNorm / SwiGLU / SDPA，权重共享 embedding），在约 9 亿 token 的中文文学语料上从零训练。主协议 12,000 步（batch 24 × 256 token），关键结论都延长到 24k 或 48k 步复核过。规模阶梯上还有 216M、334M、478M 三档放大版。
 
-Note: channel-sparse *activation*, not token-sparse attention.
+果蝇机制按四个环节接入：
 
-## What survived controls
+**花多少（激活稀疏度）**——每个 block 的 attention 输出做通道级 k-WTA：按幅值保留 top 25% 的通道，其余清零。这是通道维度的稀疏，不是 token 稀疏注意力——所有 token 都参与，稀疏发生在特征维度。同一个模型训练好后，推理时也可以改 k（有代价，见下文）。
 
-**Update throttling, not surprise.** Sequential fine-tuning on 4 domains: plain FT forgets 0.69 nats; gate + compartments forget 0.14–0.17. But a random-skip control (same compartments, coin-flip batch skipping at the same rate) matches the gate exactly (0.130 vs 0.143). The active ingredient is updating *less often* plus parameter partitioning — "learning only when surprised" adds nothing measurable. A sparse *representation* alone (k-WTA trunk, plain FT) forgets just as catastrophically as dense (0.674).
+**怎么选（选择规则）**——除了"按幅值竞争选出 top-k"，还实现了三种对照：随机子集（每步重新抽签）、固定子集（全输入共用一个随机通道集合）、sigmoid 软门控（每个通道一个 0-1 的连续权重，可学习）。四种规则在相同稀疏度下对照，是本项目机制结论的来源。
 
-**A U-shaped sparsity sweet spot near 25% (9-point sweep).** Keeping 25% of channels beats dense by ~0.08 nats at every checkpoint measured and across 3 seeds; 2% clearly hurts. But it is a *regime* property, not a constant: the advantage flips at an intermediate scale (216M, heavily data-starved) and returns at 334M. Convergence-speedup effects fade with training time; sparse-training gains persist.
+**何时写（写入门控）**——持续学习实验里，微调更新只在 batch loss 超过运行噪声地板（μ + K·σ，EMA 估计）时才执行，同时只允许更新随机分配给当前任务的 30% 参数（"小室"）。
 
-**One-way elastic dial.** A model trained at k=25% degrades gracefully when you *reduce* inference-time k (+0.05 nats at 10%), but collapses when you increase it (k=100% is worse than chance). Downward elasticity only.
+**何时忘（主动擦除）**——从过拟合的 checkpoint 出发，对幅值最低的 10% 权重做数据无关的衰减（无数据、无梯度）。
 
-**Causal, but not semantic, sparse codes.** The trained top-25% code is stable (1.5× cross-context overlap), completable from partial context, compositionally bound (1.67× vs random pairs), causally load-bearing (matched-fraction ablation does 1.76× more damage than random), and developmentally freezing (0.45→0.89 cross-snapshot stability). It is *not* semantic: code-PMI correlation ~0.03 vs 0.21 for dense vectors, and Hamming retrieval merely ties dense cosine. The code is an engine cylinder, not a library catalogue.
+## 主要发现
 
-**Targeted forgetting helps; uniform forgetting kills.** From an overfit checkpoint, 500 data-free steps of low-magnitude decay recover val (3.65→3.59), while matched uniform decay destroys the model (3.65→6.60). Boundary: the 48k schedules show no overfit tail, so there is nothing for the shower to fix there (re-verification in `shower_verify.py`).
+### 1. 中等稀疏度有一个 U 形甜点，但它不是果蝇的 5%
 
-**Entropy gate ≈ loss gate.** Gating writes by predictive entropy (no targets needed) matches loss-based gating almost exactly — the mechanism transfers to unlabeled streams. Boundary: on a heavily undertrained base everything is surprising and the gate degenerates to pass-through.
+九个稀疏度的完整扫描（92.6M，12k 步）：
 
-**Negative results, reported in full:** "free calibration gain" at 12k was an undertraining artifact (dense catches up by 24k); sparse representation does not reduce forgetting; k-WTA probe on frozen features loses to linear; single-window contamination detection is weak (set-level AUC 0.93 works); activation rate carries no seen/unseen signal.
+| 保留比例 | 2% | 5% | 10% | 15% | 25% | 40% | 50% | 60% | dense |
+|---|---|---|---|---|---|---|---|---|---|
+| val loss | 4.156 | 3.992 | 3.889 | 3.860 | **3.827** | 3.850 | 3.873 | 3.899 | 3.906 |
 
-Full numbers, pre-registered criteria, and every correction are in [REPORT_V2.md](REPORT_V2.md) and [REPORT_MEM.md](REPORT_MEM.md) (§10–§12). The consolidated paper draft is [PAPER.md](PAPER.md). Methodology log: [NOTES_RLCD.md](NOTES_RLCD.md) (internal codenames).
+三个种子全部复现（k25 3.819±0.016 vs dense 3.875±0.027），数据量翻四倍后优势保持（48k 步：3.525 vs 3.546）。果蝇的 ~5% KC 稀疏度搬过来是**次优**的——太稀了明显伤模型（2% 比 dense 差 0.25），最优在 25% 附近。
 
-## Reproducing
+但 25% 不是一个可以从果蝇推出来的常数。规模阶梯上有一个反例：216M 模型在原始协议（batch 16）下 k25 反而输给 dense 0.139，换 batch 8 后反超。这个反转跨种子复现（两个种子都输），是本项目目前**唯一未解决**的问题——它和什么变量绑定（batch、token 预算、还是模型恰好卡在某敏感区）未知。唯一确定的是它不由"规模"单独解释，因为 334M 和 478M 上 k25 都赢。
+
+### 2. 活性成分是"稳定的通道子集"，不是竞争
+
+这是整个项目机制层面最重要的结果。四种选择规则在完全相同的条件下（92.6M、12k 步、同样保留 25% 通道、同样学习率）对照：
+
+| 选择规则 | 12k val |
+|---|---|
+| 固定子集（随机选一批通道，所有输入共用） | **3.825** |
+| Sigmoid 软门控（每个通道 0-1 连续权重，可学习） | **3.823** |
+| Top-k 幅值竞争（FlyPoet 原版） | **3.827** |
+| 每步换随机子集 | 4.101 |
+| dense | 3.860 |
+
+三个"子集稳定"的规则完全打平；唯一崩溃的是每步重新抽签的那个，差 0.24。**竞争不重要，输入依赖不重要，动态性也不重要——下游权重需要的是一个从不更换的通道子集来建立"通道↔功能"的对应**。每步换人，对应就永远建不起来。
+
+这个结果也重新解释了后面码实验里测到的"稳定性"：码之所以跨上下文稳定、跨训练快照冻结，主要就是子集恒定的副产品，而不是模型学出了什么输入-码绑定。
+
+### 3. 持续学习：少更新 + 划地盘，仅此而已
+
+四个领域顺序微调（新闻 → 对话 → 法律 → 科技，各 1500 步），看旧领域能保住多少：
+
+| 方法 | 遗忘量 | 四域平均改进 |
+|---|---|---|
+| 普通顺序微调 | 0.692 | **−0.170**（三比四的领域比不微调还差） |
+| 只加"小室"（每域限 30% 参数） | 0.380 | +0.451 |
+| 小室 + 写入门控 | 0.143 | +0.735 |
+| **小室 + 随机跳批**（掷骰子跳过同样比例） | **0.130** | **+0.745** |
+
+写入门控看起来是"惊讶时才写入"的果蝇机制，效果也好。但最后一行是关键对照：**掷骰子跳过同样比例的批次，效果和门控完全一样**。门控的全部收益来自"更新的次数少了 70%"，与"根据惊讶程度挑选何时更新"无关。另有一个稀疏 trunk 对照：k-WTA 训练的模型用普通微调，遗忘 0.674——稀疏表示本身对抗遗忘毫无贡献。
+
+两个边界条件如实报告：门控在小模型上让后学的领域学得慢一点（这是"少写"的直接代价）；在严重欠训练的大模型上，一切都令人惊讶，门控退化成直通（334M 上普通微调反超）。
+
+### 4. 稀疏码的身份：因果承载、当得了索引、不是语义
+
+训练出的 k25 模型里，每个窗口的 final hidden 按 top-25% 二值化成一串"码"。五组实验给它验明正身：
+
+- **稳定**：同一字符在不同上下文中的码，重叠率是不同字符对的 1.5 倍；
+- **可补全**：给半个上下文，码能恢复到与完整上下文 0.20 的重叠（错配基线 0.15）；
+- **组合**：双字的码与两个字各自码之并集的重叠，是随机字符对的 1.67 倍；
+- **因果**：清零码通道对输出的伤害（KL 1.31）是清零随机 25% 通道（0.74）的 1.77 倍；打乱绑定（用别的窗口的码清零）伤害介于两者之间（1.09）；
+- **是主题地址**：以 6000 个带域标签的训练窗口为地址簿，Hamming 检索命中同域邻居的概率是随机基线的 2.6 倍，与 dense 余弦检索打平；地址簿扩大 10 倍（40k）质量不降；
+- **不是语义**：码间距离与词汇共现 PMI 的相关性 0.03（dense 向量 0.21）；Hamming 检索的"下一字符"命中与 dense 打平而非胜出；
+- **发展上先冻结**：跨训练快照的码稳定性从 0.45 单调爬到 0.89，而码-PMI 相关全程停在 0.03——地址系统先成熟、先冻结，语义从头到尾没进过码。
+
+加上第 2 条的机制结果（固定子集就能打平竞争选择），这个码的真实身份更接近：**一个稳定的特征选择模板，外加一个不承载语言语义的索引结构**。它像书架的编号系统——稳定、可导航、因果上拆了会乱——但书架上摆什么内容由 dense 侧的权重决定。
+
+### 5. 推理时是窄峰，不是滑块
+
+用 k=25% 训练的模型，推理时把 k 降到 10% 只损失 0.05 nats（省 60% 的有效计算），升到 40% 就崩（+0.87），开到 100% 比随机猜还差。dense 训练的模型方向正好镜像：dense 最优，任何稀疏推理都大幅受损。两侧的权重都与各自的稀疏模式共适应了——**这不是一个可以随意拧的旋钮，而是一组互斥的计算组织方式**。弹性只存在于训练点向下的小范围内。
+
+### 6. 撤回的结论（与我们最初的假说相反）
+
+这些结论最初都写进了报告，后来被更强的对照推翻。撤回过程完整保留在报告里，因为它们比正结果更有方法论价值：
+
+- **"稀疏带来免费校准增益"**——12k 步时稀疏模型的校准好得惊人（top-1 准确率 3.7 倍），24k 步时 dense 全面追平。是在和没训完的基线比较。
+- **"惊讶门控抗遗忘"**——随机跳批对照（见第 3 节）证明收益与"惊讶"无关。
+- **"定向遗忘能修复过拟合"**——固定验证窗口复核显示四基座全部零效应（原报告的"恢复"是随机评估协议 ±0.06 噪声的产物；均匀衰减摧毁模型是真的，但那只是"所有权重缩水 40% 当然坏"）。
+
+### 7. 其它负结果
+
+冻结的 Qwen3-0.6B 特征上接 k-WTA 探针，输给线性探针（0.570 vs 0.642）——机制必须从头训进模型。单窗口训练数据污染检测（四特征集成）不敌单一 NLL 特征（0.517 vs 0.605），集合级检测（AUC 0.93）才是可用的形态。逐 token 激活率不携带"见过/没见过"信号（OOD AUC 0.5005）。
+
+## 规模阶梯（k25 vs dense，12k 步，全部匹配协议）
+
+| 规模 | 协议 | dense | k25 | k25 优势 |
+|---|---|---|---|---|
+| 92.6M | b24, 74M tok | 3.906 | 3.819±0.016 | +0.087 |
+| 215.8M | b8, 24.6M tok | 4.870 | 4.855 | +0.015 |
+| 215.8M | b16, 49M tok | 4.181 | 4.320 | **−0.139（唯一反例）** |
+| 334M | b8, 24.6M tok | 5.266 | 5.191 | +0.075 |
+| 477.8M | b4, 12.3M tok | 5.626 | 5.536 | +0.090 |
+| 477.8M | b4, 24.6M tok | 5.486 | 5.306 | **+0.180** |
+
+最后一行值得单独说：0.5B 档训练预算翻倍后，稀疏优势**翻倍**（+0.090 → +0.180）——与 92.6M 档"数据越多优势越小"的方向相反。稀疏收益随规模与预算如何变化，是这个项目留下来的最大开放问题；216M-b16 的反例成因排第二。
+
+## 未做的事与边界
+
+单种子为主（头对头比较有两种子）；字符级、中文、单一架构族；规模阶梯最高 478M 且全部处于 Chinchilla 意义上的数据饥饿区——甜点在数据充裕 regime 的行为未测；持续学习只用了一种领域顺序； shower 撤回所依据的固定窗口协议是事后采纳的；组合性基线是池内均匀采样而非频率匹配。所有这些边界都写在 [PAPER.md](PAPER.md) §5。
+
+## 文件地图
+
+- **训练**：`train_v2.py`（主脚本，`--kfrac` 扫稀疏度，`--selector` 换选择规则，`--sleep_*` 睡眠循环，`--snap_every` 快照）、`adaptive_kwta.py`（自适应阈值 CUDA kernel）
+- **持续学习**：`cl_experiment.py`（ft / comp / fly / skip 四臂，`--comp_frac` 小室比例，`--gate_k` 阈值，`gate_type=entropy` 免标签门控，任意域序列）
+- **码分析**：`code_address.py`（稳定性/补全）、`code_composition.py`（组合性）、`code_transplant.py` + `code_transplant2.py`（因果消融 + 三向 shuffle 对照）、`domain_retrieval.py`（主题检索）、`codebook_export.py`（码簿导出）、`elite_census.py`（精英普查）、`dev_crosssnap.py` / `dev_timing.py`（发展计时）
+- **校准与熟悉度**：`calibration_eval.py`、`fam_heads.py` / `fam_nll.py`（熟悉度探针）、`forensics.py`（集成取证）
+- **遗忘**：`forgetting_shower.py`、`shower_verify.py`（固定窗口复核）
+- **弹性**：`elastic_inference.py`（单模型拨 k）、`elastic_matrix.py`（训练 k × 推理 k 全矩阵）
+- ** flymemory 旁路**：`ma_table_d1.py`（训练化投影 vs 哈希）、`hamming_prefilter_bench.py`（预过滤基准）、`codebook_export.py`
+- **收数**：`collect_results.py`（全项目一表）、`verify_claims.py`（**凭据脚本**：一条命令重算论文全部头条数字，16 项检查，PASS/FAIL 打表）
+
+结果 JSON 全部在 `logs_v2/`；模型权重（350MB/个）不入库。报告：[REPORT_V2.md](REPORT_V2.md)（三臂研究+扫描+规模阶梯）、[REPORT_MEM.md](REPORT_MEM.md)（记忆三部曲+后续+撤回）、[PAPER.md](PAPER.md)（合并论文稿）、[NOTES_RLCD.md](NOTES_RLCD.md)（预注册与方法论日志，含内部代号）。
+
+## 复现
 
 ```bash
 python train_v2.py --arm std --steps 24000
 python train_v2.py --arm flynetS --kfrac 0.25 --tag _k25 --steps 12000
-python cl_experiment.py fly 1500 std                 # gated continual learning
-python cl_experiment.py skip 1500 std                # random-skip control
-python shower_verify.py                              # fixed-eval shower re-verification
-python code_address.py && python sparse_retrieval.py # sparse-code analyses
+python cl_experiment.py fly 1500 std          # 门控持续学习
+python cl_experiment.py skip 1500 std         # 随机跳批对照
+python shower_verify.py                       # 淋浴复核（固定窗口）
+python verify_claims.py                       # 重算全部头条数字
+python code_address.py && python domain_retrieval.py
 python calibration_eval.py --arm std --model logs_v2/std_model.pt --seed 0
 ```
 
-`train_v2.py`, `cl_experiment.py` and the newer analysis scripts resolve paths relative to the repo root. A few older helpers show an illustrative `D:\user\...` layout — junction or edit for your machine. Model weights (350MB each) are not committed; curves and eval JSONs live in `logs_v2/`. GPU jobs are strictly serial — the 334M CL runs trigger CUDA sysmem fallback at batch ≥ 16 and stall.
+`train_v2.py`、`cl_experiment.py` 和新分析脚本按仓库根目录解析路径，`data_v2/` 就位即可跑。少数旧脚本内含示意路径（`D:\user\...`），junction 或手改即可。GPU 任务请严格串行——334M 的 CL 在 batch ≥ 16 会触发 CUDA sysmem 倒灌并卡死。
