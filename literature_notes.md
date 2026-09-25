@@ -121,3 +121,79 @@
 - 无"trained-in 通道 WTA + LM + 匹配对照"的直接仓库——flypoet 空位保持；
 - 最近邻仓库/列表：[ContinualAI papers 列表](https://github.com/ContinualAI/continual-learning-papers)（343+ 篇）、SpikingLM（OpenReview）、BiRT（bio-replay ViT）、NM-Hebb（Hebb+WTA）；
 - Lässig 的代码可用性未在摘要页确认（CatalyzeX 链接需跳转）。
+
+## 深读 3：[UPGD (ICLR 2024)](https://arxiv.org/abs/2404.00781)——效用调制更新的完整版
+
+**机制**：每参数维护效用度量 → 高效用参数的扰动更小（保护→抗遗忘），低效用参数扰动更大（ rejuvenate→保可塑性）。**一个效用度量同时解决遗忘与可塑性丧失两个失败**——多数先前方法只解决其一。
+
+**实验**：数百个非平稳性的流式学习（任务边界未知），基线普遍逐任务衰退，UPGD 持续提升；PPO 强化学习同样避免 Adam 的性能下滑。ICLR 2024，代码 github.com/mohmdelsayed/upgd。
+
+**与 FlyPoet 的关键映射**：
+- 我们的门控 = UPGD 的"保护"半边（抗遗忘）；我们的 334M 观察门控退化直通 = 可塑性半边未处理；
+- UPGD 启示的杂交实验：**惊讶-效用调制**——门控（何时写）+ 效用加权扰动（写哪里/怎么写）二合一，
+  即 MIST（哪里）+ FlyPoet（何时）+ UPGD（怎么写）三原理的正交组合。
+- 与 random-skip 裁决的关系：UPGD 的效用调制是**参数轴**的选择性——与我们"参数轴选择性未对照"
+  的缺口正好互补，且它自带"保护 vs 新化"的对称设计。
+
+## 深读 4：RePr（检索摘要，PDF 404 用搜索结果）
+
+[RePr (CVPR 2019)](https://openaccess.thecvf.com/content_CVPR_2019/papers/Pratt_RePr_Improved_Training_of_Convolutional_Filters_CVPR_2019_paper.pdf)：两阶段训练——先剪除高干扰过滤器训练，再恢复部分被剪过滤器继续训练。"把剪枝比例当作 Dropout 参数"，核心概念是**过滤器间表示干扰（interference）**：干扰大的过滤器学到重复特征，剪除后恢复可减少重复、提升容量利用。
+**与 FlyPoet random-k 失败的对接**：random-k25 每步换子集 = 每步强迫下游在全新过滤器组合上重建对应 = 干扰最大化；fixed-k = 零干扰。RePr 的"先剪后恢复"恰是我们 dose 曲线的静态版。理论对接点明确。
+
+## 深读 5：[Bricken & Pehlevan, NeurIPS 2021](https://arxiv.org/abs/2111.05498)——"Attention ≈ SDM"理论锚
+
+**对应关系**：Query=SDM 读出的地址线索；Key=硬位置地址向量（点积替代 Hamming 临界距离）；Value=位置上存的数据向量；**softmax 温度=SDM 的激活临界半径**（控制多少位置参与读取）。
+**关键验证**：推导了等价成立的数据条件，并**在预训练 GPT-2 中确认条件满足**——真实的 attention 头确实运行在 SDM 机制区。
+
+**对 FlyPoet 的意义（理论锚）**：我们的 k25 码 = 这个 SDM 框架里的**二值化硬地址**。
+- Bricken 的 attention 是"软 SDM"（连续权重）；我们的 k-WTA 是"硬 SDM"（二值 top-k）——
+  从软到硬正好是本文"码因果 1.76×"的试验田（硬化的代价与收益）；
+- 我们的域检索（Hamming hit@1 2.6× chance）= 该理论在通道维度的实证；
+- 引用位：PAPER §3.5 "码=地址"与 §"码非语义"两节的关键 related work。
+
+## 蘑菇体计算模型基准（神经保真度对照，服务于 related work）
+
+| 模型 | 年份/期刊 | 内容 | 保真度要点 |
+|---|---|---|---|
+| [Wang et al.](https://www.sciencedirect.com/science/article/pii/S0896627321006826) | 2021 Neuron | 用 ML（进化优化+监督）重建果蝇嗅觉回路：51 肾小球→2000 KC，PN→KC 收敛 ~50:1 | 解剖级保真（连接率、稀疏度与生物一致） |
+| [Zhang & Sharpee](https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2013.00141/full) | 2013 Front. Comput. Neurosci. | PN→KC 稀疏编码变换的设计原理 | 理论：维度扩张产生稀疏码 |
+| [Honegger et al.](https://www.jneurosci.org) | 2011 J.Neurosci. | KC 群体成像实验基准（稀疏响应实测） | 生物基准数据 |
+| Dasgupta et al.（"A fly-inspired HW solution"） | 2017 | 随机扩张重编码的计算理论 | 我们引言已引的相关理论 |
+| [Babadi & Sompolinsky](https://www.cell.com/neuron/fulltext/S0896-6273(14)00370-4) | 2014 Neuron | PN→KC 维度扩张产生稀疏码的理论 | 理论基础 |
+
+**FlyPoet 的位置**：这些模型以"解剖保真"为目标（50:1 收敛、5% 激活对齐生物实测）；
+FlyPoet 反其道——**用 Transformer 的实际最优（25%）对照生物常数（5%）并证明后者次优**。
+这个对比本身是一段：解剖保真不是性能保真，机制灵感的正确用法是"对照性地借用"而非"常数地照搬"。
+
+## 深读 6：[Dasgupta, Sheehan, Stevens & Navlakha, PNAS 2017](https://www.pnas.org)——源头论文确认
+
+**"A neural data structure for novelty detection"**：果蝇嗅觉回路 = 一种高效的局部敏感哈希（LSH）。
+- 结构：~50 投影神经元 → 稀疏随机固定连接扩张 → ~2000 KC → **top 5% WTA** → 局部学习（只更新激活的 KC）
+- 性能：相似性排序、最近邻、去重任务上匹敌或超过 SimHash
+- 衍生谱系：Can a Fruit Fly Learn Word Embeddings? (Liang 2021)、Fly-CL、果蝇式联邦分类
+
+**与 FlyPoet 的最终对齐**：Dasgupta 2017 的算法三件套（随机扩张+5%WTA+局部学习）
+我们各有一个 LM 规模的对照答案：
+1. 随机扩张 → **top-k 幅值扩张不必要**（fixed-k 打平，四轴裁决）
+2. 5% WTA → **25% 最优**（九点扫描），且随规模/预算变化
+3. 局部学习 → **门控=纯节流**（随机跳批对照）
+我们的贡献可以定位为：**对这条"果蝇算法"谱系做了一次 LM 规模、匹配对照的系统重检**，
+产出三个修正（最优稀疏度、选择规则、写入策略）+ 一个新现象（478M 晚期 crossover）。
+
+## 深读 7：[SDMLP——"Sparse Distributed Memory is a Continual Learner"（ICLR 2023）](https://arxiv.org/abs/2303.11934)——**最近邻先例**
+
+**作者**：Bricken, Davies, Singh, Krotov & Kreiman（MIT CBMM × IBM）。代码：github.com/trentbrick/sdmcontinuallearner
+**机制**：Kanerva SDM 改造成单隐层 MLP（SDMLP），支持无 replay 的在线持续学习。
+**关键数字**：**每输入约 20% 神经元激活**（稀疏、模式一致）——**与我们的 25% 甜点独立收敛**（不同架构 MLP vs Transformer、不同任务、不同团队）。
+**他们的重要工程发现**：稀疏网络里**动量优化器会"陈旧动量"化**（stale momentum）→ 灾难遗忘；修复是训练方案的一部分——与我们的 fixed/random-k 对照（子集稳定性）同族的"稀疏网络特有优化病理"。
+**稀疏的双重角色**：同一稀疏激活机制既影响 CL 又影响 NCL——CL 收益来自与 SDM 容量/精度权衡共享的设计，而非单独的 CL 机制。
+
+**对 FlyPoet 的意义**：
+1. **20%↔25% 独立收敛 = U 形甜点的跨架构佐证**（PAPER 可引：独立团队在 MLP 上得到相近的最优稀疏度）；
+2. 我们的差异化：Transformer 主干 + 匹配对照方法学 + 码身份五组表征 + 跳批剂量曲线——他们都没有；
+3. 他们的 stale-momentum 发现值得在我们的训练里检查（AdamW 的动量在 k-WTA 稀疏激活下是否有同样的病理——**潜在新实验**）。
+
+## 险些撞车核实：Fly-CL (Zou et al., ICLR 2026)
+
+果蝇嗅觉回路（稀疏随机投影+KC 去相关）→ **预训练模型的持续表示学习**：渐进去相关、训练时间大降、性能匹敌或超 SOTA CL 方法，代码在 GitHub。
+**与 FlyPoet 的边界**：他们 = 预训练 backbone + 表征去相关 + 效率；我们 = 从头训练 + 通道 WTA + 匹配对照 + 码身份。不撞车，但 related work 必引（同果蝇灵感+同持续学习方向）。正确 arXiv 号待查（此前猜号两次落空，改用标题搜索验证）。
