@@ -1,0 +1,1 @@
+{"arm": "flynetS", "tag": "_fix25", "k_frac": 0.25, "impl": "torch", "selector": "fixed", "e_frac": 0.9, "d": 768, "layers": 12, "heads": 12, "ffn_h": 2048, "batch": 24, "seq_len": 256, "tokens": 73728000, "optimizer": "AdamW", "schedule": "OneCycle", "seed": 7, "steps": 12000, "params_M": 92.635392}

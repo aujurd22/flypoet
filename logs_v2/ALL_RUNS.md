@@ -3,6 +3,7 @@
 | std_smoke_sl | std | 0.1 | None | 768 | 7 | 60 | 92.6 | 6.9906 | 1.8 | 0.843 | None |
 | flynetS_e75 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9622 | 82.9 | 0.715 | 0.3593 |
 | flynetS_e90 | flynetS | 0.1 | energy | 768 | 7 | 12000 | 92.6 | 3.9312 | 82.0 | 0.722 | 0.5846 |
+| flynetS_fix25 | flynetS | 0.25 | torch | 768 | 7 | 12000 | 92.6 | 3.8252 | 76.1 | 0.734 | None |
 | flynetS_k02 | flynetS | 0.02 | None | None | None | 12000 | 92.6 | 4.1563 | 84.7 | 0.756 | None |
 | flynetS_k05 | flynetS | 0.05 | torch | 768 | 7 | 12000 | 92.6 | 3.9915 | 84.4 | 0.738 | None |
 | flynetS_k15 | flynetS | 0.15 | None | None | None | 12000 | 92.6 | 3.8596 | 85.3 | 0.738 | None |
@@ -13,6 +14,8 @@
 | flynetS_k40 | flynetS | 0.4 | None | None | None | 12000 | 92.6 | 3.8501 | 83.1 | 0.774 | None |
 | flynetS_k50 | flynetS | 0.5 | torch | 768 | 7 | 12000 | 92.6 | 3.8726 | 82.2 | 0.773 | None |
 | flynetS_k60 | flynetS | 0.6 | None | None | None | 12000 | 92.6 | 3.8991 | 81.0 | 0.765 | None |
+| flynetS_rand25 | flynetS | 0.25 | torch | 768 | 7 | 12000 | 92.6 | 4.1006 | 77.7 | 0.699 | None |
+| flynetS_sig25 | flynetS | 0.25 | torch | 768 | 7 | 12000 | 92.6 | 3.8226 | 82.0 | 0.721 | 0.4997 |
 | flynetS_snap | flynetS | 0.25 | torch | 768 | 7 | 12000 | 92.6 | 3.8278 | 83.8 | 0.739 | None |
 | std_s8 | std | 0.1 | None | 768 | 8 | 12000 | 92.6 | 3.8415 | 80.2 | 0.717 | None |
 | std_s9 | std | 0.1 | None | 768 | 9 | 12000 | 92.6 | 3.8777 | 84.1 | 0.73 | None |

@@ -50,6 +50,7 @@ A five-part characterization of the trained k25 code (top-25% channels of the fi
 4. **A topic address**: Hamming lookup over an address book retrieves same-domain neighbours at 2.6× chance (hit@1 0.325), tying dense cosine.
 5. **Not semantic, developmentally frozen**: code–PMI correlation is 0.03 (dense: 0.21) and never develops; cross-snapshot code stability rises 0.45→0.89 over training. The address system freezes; semantics never enter.
 6. **Elite structure without elite identity**: channel win-rates are concentrated (Gini 0.50–0.58, rising with scale; the inversion point is the most concentrated), but cross-seed elite overlap is at chance (6.7% vs 6.5% expected).
+7. **Stability is the mechanism, not competition**: a four-arm selection control (top-k vs random-k vs fixed-k vs sigmoid-gate, all at 25% keep) shows three *stable*-subset mechanisms tie exactly (3.823–3.827) while random-k — the only one that re-draws the subset every step — loses by 0.24 nats. The benefit comes from a *stable channel subset structure* that downstream weights can adapt to; neither competition, input-dependence, nor dynamics are necessary. This also reframes the code-stability findings: they are largely a byproduct of subset constancy.
 
 ### 3.6 Further negatives
 

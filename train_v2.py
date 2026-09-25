@@ -84,6 +84,7 @@ class KWTA(nn.Module):
         self.selector = selector
         self._cuda_fn = None
         self._fixed_mask = None
+        self._gate = None
         self.last_keep = None      # tensor: mean keep fraction, set in forward
 
     def forward(self, x):
@@ -114,6 +115,15 @@ class KWTA(nn.Module):
             noise = torch.rand(x.shape[:-1] + (d,), device=x.device)
             thr = torch.kthvalue(noise, d - k + 1, dim=-1, keepdim=True).values
             return x * (noise >= thr)
+        if self.selector == "sigmoid":
+            # soft selection (Gated Attention style): query-dependent sigmoid
+            # gate on the attention output, self-calibrated to ~k_frac mean rate
+            if self._gate is None:
+                self._gate = torch.nn.Linear(d, d).to(x.device)
+                torch.nn.init.zeros_(self._gate.bias)
+            gate = torch.sigmoid(self._gate(x.detach()))
+            self.last_keep = gate.mean().detach()
+            return x * gate
         if self.selector == "fixed":
             if self._fixed_mask is None or self._fixed_mask.shape[0] != d:
                 g = torch.Generator().manual_seed(42)
@@ -219,7 +229,7 @@ def main():
                     help="k-WTA channel keep fraction (sparsity sweep)")
     ap.add_argument("--impl", choices=["torch", "cuda", "energy"], default=None,
                     help="override k-WTA implementation")
-    ap.add_argument("--selector", choices=["magnitude", "random", "fixed"],
+    ap.add_argument("--selector", choices=["magnitude", "random", "fixed", "sigmoid"],
                     default="magnitude",
                     help="channel-selection rule for the torch k-WTA impl")
     ap.add_argument("--e_frac", type=float, default=0.90,
