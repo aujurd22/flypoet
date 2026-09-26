@@ -1,0 +1,39 @@
+{
+ "fly_5pct": {
+  "label": "fly_KC_5%",
+  "n": 400,
+  "dim": 2000,
+  "act_rate": 0.05,
+  "jaccard_mean": 0.026,
+  "jaccard_std": 0.0206,
+  "eff_dim": 242.5
+ },
+ "fly_25pct": {
+  "label": "fly_KC_25%",
+  "n": 400,
+  "dim": 2000,
+  "act_rate": 0.25,
+  "jaccard_mean": 0.1442,
+  "jaccard_std": 0.0404,
+  "eff_dim": 109.4
+ },
+ "ours_25pct": {
+  "label": "ours_25%",
+  "n": 400,
+  "dim": 768,
+  "act_rate": 0.2513,
+  "jaccard_mean": 0.1512,
+  "jaccard_std": 0.0253,
+  "eff_dim": 205.7
+ },
+ "ours_5pct": {
+  "label": "ours_5%",
+  "n": 400,
+  "dim": 768,
+  "act_rate": 0.0521,
+  "jaccard_mean": 0.0463,
+  "jaccard_std": 0.0314,
+  "eff_dim": 186.6
+ },
+ "checkpoint": "flynetS_k25_24k"
+}
