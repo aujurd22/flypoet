@@ -305,3 +305,32 @@ FlyPoet 的规模阶梯（五规模 × 匹配对 × 剂量曲线）在这个方�
 2. **安全-稀疏交互是未探索的**：我们的 k25 是否影响安全对齐？
    0.5B 级模型的拒绝行为在 k25 vs dense 下是否不同？（未来实验）
 3. **CHESS 的通道阈值方法与我们的 k-WTA 同族**（training-free vs trained-in 的区别）。
+
+## 块 11：连通组约束计算 + axo-axonic 门控（20:4x-21:0x 检索）
+
+**重要新发现**：
+
+1. [Axo-axonic synapses (Ceballos et al., 2026)](https://pmc.ncbi.nlm.nih.gov/articles/PMC13126034) —
+   利用完整 EM 连通组研究轴突-轴突突触的回路逻辑——这类突触可以 **veto、amplify、synchronize**
+   动作电位。这直接对应我们的门控机制：DA 门控可能本质上就是 axo-axonic 突触式的
+   选择性 veto，而非简单的 loss 阈值比较。
+
+2. [Fly-connectomic Graph Model (arXiv 2026)](https://arxiv.org/html/2602.17997v3) —
+   把成年果蝇全脑连通组实例化为 GNN——connectome-constrained 计算模型的最新进展。
+
+3. ["Frozen algorithms" (Raman et al., 2021)](https://pmc.ncbi.nlm.nih.gov) —
+   稀疏随机 KC 架构的学习——**与我们 fixed-k 臂（稳定子集即可）直接对应**。
+   他们证明了"冻结的随机连接"在训练中保持稳定就是足够的——我们的四臂裁决
+   从 Transformer 侧独立确认了同一结论。
+
+4. APL 反馈抑制（[eLife](https://cdn.elifesciences.org)）——KC→APL→KC 的反馈回路
+   实现 WTA——这是蘑菇体稀疏编码的标准模型，也是我们 top-k 机制的生物学原型。
+
+**Fly-CL (Zou et al., ICLR 2026) 详细信息**：
+- [arXiv:2510.16877](https://arxiv.org/abs/2510.16877) | [GitHub: gfyddha/Fly-CL](https://github.com/gfyddha/Fly-CL)
+- ICLR 2026 poster | 引用 ~15
+- 随机高维投影 + 稀疏 k-WTA 哈希 → 渐进去相关
+- 用于预训练模型的持续表示学习（减少训练时间，性能匹敌/超过 SOTA CL 方法）
+- 与 FlyPoet 的差异：他们用预训练 backbone 的特征做后验去相关；
+  我们从头训练 WTA 进 Transformer；他们关注效率（减少训练时间），
+  我们关注机制归因（匹配对照 + 码身份 + 撤回）
