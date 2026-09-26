@@ -299,3 +299,22 @@ b24/1500 步/域，seed 7/8/9。
 工件：analyze_two_ts.py / aggregate_seeds.py / logs_v2/cl_*_gt-two_ts*；
 注意 W8 与 W250 同 seed 同结果文件名会互相覆盖（见 logs_v2/COLLISION_NOTE.txt），
 W250 s7=0.7008 与 s9=0.7003 的 result json 已被覆盖，真值在链日志与本节。
+
+## DA 拓扑分析结果（2026-09-23/26，MaleCNS v1.0）
+
+**DA 神经元**：4,447（预测多巴胺能）
+- 4,058 Kenyon Cells（KC 本身有 DA 受体！不是只有 DAN 投射 DA）
+- 330 DANs（真正的多巴胺神经元）
+- 22 CX（中央复合体）
+- somaSide: L 2,208 / R 2,236（对称）
+
+**DA 输出**：2.06M 条边
+- Top targets：**APL × 2**（前侧对侧神经元，反馈抑制 KC 的关键中间神经元，总权重 221K）
+- **MBON01/05/09/11**（蘑菇体输出神经元——每个 compartment 一个 MBON）
+- DA→DA 自环：931K 边，180 万总权重——**DA 系统高度自连接**
+
+**FlyPoet 映射**：
+- 真实 DA 门控是 **compart化** 的（每个 MBON 对应一个 DA 子群+一个 KC 亚集）
+- 我们的全局阈值 = 一个 DA 控制所有 KC = **过度简化**
+- 正确实现：**每个参数子室有独立的 μ/K·σ 噪声地板**
+- 但随机跳批对照已证 throttling 是主成分——compart 化门控是否优于全局门控是开放问题
