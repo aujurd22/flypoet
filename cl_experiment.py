@@ -38,6 +38,7 @@ D2I = {"general": 0, "news": 1, "encyclopedia": 2, "technology": 3, "law": 4,
        "education": 5, "dialogue": 6, "finance": 7}
 COMP_FRAC = 0.30          # default; override with --comp_frac
 GATE_K = 0.25          # step only when loss > mu + K*sigma
+TS_W = int(os.environ.get("FLYPOET_TS_W", "250"))   # two_ts reference snapshot window
 
 
 def load_rows(split):
@@ -130,9 +131,15 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
         masks = comp_masks(model, si, comp_frac) if arm in ("comp", "fly", "skip") else None
         mu = sigma = None
         mu_e = sigma_e = None
+        mu_s = sigma_s = None
+        onset_ls, onset_e, onset_s = [], [], []
+        flat_ref = None
+        n_skip_streak = 0
         n_onset, onset_ls, onset_e = 20, [], []
         gated = total = 0
         arr = streams_tr[dom]
+        if arm == "fly" and gate_type in ("two_ts", "two_tsc"):
+            flat_ref = [p.detach().clone() for p in model.parameters()]
         for step in range(1, STEPS + 1):
             x, y = batches(arr, BATCH)
             opt.zero_grad(set_to_none=True)
@@ -148,8 +155,43 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                 mu = 0.98 * mu + 0.02 * l
                 sigma = 0.98 * sigma + 0.02 * abs(l - mu)
             allow = True
+            pre_bwd = False
+            score = None
             if arm == "skip":
                 allow = bool(torch.rand(1).item() < (1.0 - gate_k))
+                gated += (not allow)
+            elif arm == "fly" and gate_type in ("two_ts", "two_tsc"):
+                # two-timescale score over a parameter reference snapshot.
+                # two_ts:  |<grad, ref-now>|           (raw inner product)
+                # two_tsc: cosine variant + forced allow every 50 skips
+                # (raw version self-locks: no pass -> no displacement -> no signal)
+                loss.backward()
+                pre_bwd = True
+                with torch.no_grad():
+                    s = g2 = d2 = None
+                    for p, r in zip(model.parameters(), flat_ref):
+                        if p.grad is not None:
+                            g = p.grad.float(); dv = (r - p.detach().float())
+                            t = (g * dv).sum(); t2 = g.pow(2).sum(); t3 = dv.pow(2).sum()
+                            s = t if s is None else s + t
+                            g2 = t2 if g2 is None else g2 + t2
+                            d2 = t3 if d2 is None else d2 + t3
+                    if gate_type == "two_tsc":
+                        score = abs(float(s)) / (float(g2.sqrt() * d2.sqrt()) + 1e-12)
+                    else:
+                        score = abs(float(s))
+                if mu_s is None:
+                    onset_s.append(score)
+                    if len(onset_s) == n_onset:
+                        mu_s = float(np.mean(onset_s))
+                        sigma_s = float(np.std(onset_s)) + 1e-6
+                else:
+                    mu_s = 0.98 * mu_s + 0.02 * score
+                    sigma_s = 0.98 * sigma_s + 0.02 * abs(score - mu_s)
+                    allow = score > mu_s + gate_k * sigma_s
+                if gate_type == "two_tsc":
+                    allow = allow or (n_skip_streak >= 50)
+                n_skip_streak = 0 if allow else n_skip_streak + 1
                 gated += (not allow)
             elif arm == "fly" and mu is not None:
                 if gate_type == "entropy":
@@ -170,7 +212,8 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                 gated += (not allow)
             total += 1
             if allow:
-                loss.backward()
+                if not pre_bwd:
+                    loss.backward()
                 if masks is not None:
                     for name, p in model.named_parameters():
                         mk = masks.get(name)
@@ -178,6 +221,15 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
                             p.grad.mul_(mk)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 opt.step()
+            if arm == "fly" and gate_type in ("two_ts", "two_tsc") and step % TS_W == 0:
+                flat_ref = [p.detach().clone() for p in model.parameters()]
+            if arm == "fly" and gate_type == "two_ts" and step % 50 == 0:
+                with open(os.path.join(ROOT, "logs_v2",
+                          f"cl_fly_std_gt-two_ts_siglog.jsonl"), "a") as sf:
+                    sf.write(json.dumps({"stage": si, "step": step,
+                                         "loss": round(l, 4),
+                                         "score": round(score, 6),
+                                         "allow": bool(allow)}) + "\n")
             if step % 200 == 0:
                 log.write(json.dumps({"arm": arm, "stage": si, "domain": dom,
                                       "step": step, "loss": round(l, 4),

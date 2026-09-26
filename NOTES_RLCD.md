@@ -263,3 +263,39 @@ flynetS vs std 匹配点 val 差（n=6）: +0.0041 ± 0.0195 SE
 **[C] 地址簿规模扩展**（store 4k→40k，10×）：
 - 检索 hit@10 ≥ 0.75：**Hamming 地址质量随库扩展保持**——flymemory 部署绿灯。
 - hit@10 < 0.6：地址质量不随库扩展，flymemory 预过滤方案需要 dense 主导。
+
+## §十五 二时间尺度门控复验（2026-09-26 凌晨，外部论文交叉实验）
+
+来源：Self-Play Pretraining with Zero Data（arXiv 2609.30063）的 reward 消融显示
+一步信号（last_step/loss_delta）劣且 seed 双峰，唯有"当前梯度×半程参数位移"的两
+时间尺度信号稳定最优。预注册预测：把 FlyPoet 的惊讶门控换成同型两时间尺度信号，
+应在 improve 上优于一步 loss 门控；缩短窗口（W8）应退化回一步水平。
+
+实现：cl_experiment.py 新增 gate_type `two_ts`（每 TS_W 步快照参数参考点，
+score=|⟨∇L_batch, θ_ref−θ_now⟩|，EMA 阈值同 loss 门控）与 `two_tsc`（余弦归一 +
+连续 50 步拒绝强制放行）。FLYPOET_TS_W 环境变量控制窗口。92.6M/std/4 域 CL，
+b24/1500 步/域，seed 7/8/9。
+
+结果（improve mean±std，±0.05 判据线）：
+- loss 门控 3 seed：0.685±0.073（0.582/0.736/0.737，双峰）
+- two_ts W250 3 seed：0.7005±**0.0002**（0.7008/0.7004/0.7003）
+- two_ts W8 3 seed：0.5338±**0.0001**（唯一净遗忘臂，forget +0.020×3）
+- two_tsc 1 seed：0.719 / skip70 1 seed：0.745
+
+裁决：
+- **mean 优势证伪**：W250−loss 门控 = +0.015（within noise）。单 seed 的"+0.12"
+  是 s7 低模式抽签假象——与"惊讶选择性之死"同一条纪律的二次应验。
+- **稳定性定律幸存**：two_ts 两臂 seed std 1e-4 量级 vs loss 门控 0.073 且双峰。
+  门控结构不写在均值上（均值=更新预算主导），写在方差里——一步信号路径依赖级联，
+  两时间尺度把窗内数据序噪声积分掉。
+- **窗口长度定律 3v3 定案**：W250−W8 = +0.167，W8 三 seed 全部净遗忘。
+- **自锁机理（结构性发现）**：train-or-not 形态下，原始内积式必然棘轮锁死
+  （不放行→无位移→无信号），pass 率 stage 内单调衰减至 <0.1；论文无此问题因其
+  门是"选哪条数据"（always-train）。two_tsc 的保底放行完全消除自锁（pass 稳定
+  0.3，improve 0.719，单 seed）。
+- 初步：two_ts score 与瞬时 loss 负相关（Spearman −0.62，样本弱）——选"顺"
+  不选"难"，与惊讶门控方向相反。
+
+工件：analyze_two_ts.py / aggregate_seeds.py / logs_v2/cl_*_gt-two_ts*；
+注意 W8 与 W250 同 seed 同结果文件名会互相覆盖（见 logs_v2/COLLISION_NOTE.txt），
+W250 s7=0.7008 与 s9=0.7003 的 result json 已被覆盖，真值在链日志与本节。

@@ -1,0 +1,4 @@
+File-collision note (2026-09-06 06:05):
+cl_fly_std_gt-two_ts_s9_result.json was overwritten by the W8 (FLYPOET_TS_W=8) s9 run and is now renamed to cl_fly_std_gt-two_ts_W8_s9_result.json.
+The W250 s9 (seed 9, TS_W=250) summary was: avg_improvement=0.7003, avg_forgetting=-0.0830 (preserved in chain log call_ee9d3041 and memory).
+W8 s8 (seed 8) crashed natively mid-stage-3 before writing results; W250 s8 file (0.7004) intact.
