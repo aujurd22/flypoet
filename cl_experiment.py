@@ -96,7 +96,11 @@ def comp_masks(model, domain_idx, frac=COMP_FRAC):
 
 
 def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
-            gate_k=GATE_K, gate_type="loss"):
+            gate_k=GATE_K, gate_type="loss", match_rate=None):
+    # realized skip rate for the random-skip control: explicitly matched to the
+    # gate arm's measured rate when provided, else falls back to the legacy
+    # gate_k interpretation (see 2026-09-27 errata in README).
+    match_rate = gate_k if match_rate is None else match_rate
     kwta_opts = ({"impl": "cuda"} if trunk == "flynetS_adaptive" else
                  {"impl": "torch", "k_frac": 0.25 if "k25" in trunk else 0.10}
                  if trunk.startswith("flynetS") else None)
@@ -158,7 +162,12 @@ def run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac=COMP_FRAC,
             pre_bwd = False
             score = None
             if arm == "skip":
-                allow = bool(torch.rand(1).item() < (1.0 - gate_k))
+                # 2026-09-27 errata: this arm must skip the SAME realized rate as
+                # the gate, not the same threshold. Pass --match_rate R (the fly
+                # arm's measured skip rate) or --gate_k 0.7 (legacy: R=gate_k).
+                # A mismatched pair (e.g. skip 25% vs gate 68%) invalidates the
+                # control: see README errata section.
+                allow = bool(torch.rand(1).item() < (1.0 - match_rate))
                 gated += (not allow)
             elif arm == "fly" and gate_type in ("two_ts", "two_tsc"):
                 # two-timescale score over a parameter reference snapshot.
@@ -270,6 +279,7 @@ def main():
     gate_k = float(sys.argv[6]) if len(sys.argv) > 6 else GATE_K
     gate_type = sys.argv[8] if len(sys.argv) > 8 else "loss"
     batch = int(sys.argv[9]) if len(sys.argv) > 9 else BATCH
+    match_rate = float(sys.argv[10]) if len(sys.argv) > 10 else None
     globals()['BATCH'] = batch
     global DOMAINS
     if len(sys.argv) > 7 and sys.argv[7]:
@@ -291,13 +301,14 @@ def main():
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_curve.jsonl"), "a",
               encoding="utf-8") as log:
         res = run_arm(arm, trunk, corpus, rows_train, rows_val, log, comp_frac,
-                      gate_k, gate_type)
+                      gate_k, gate_type, match_rate)
     avg_f = float(np.mean(list(res["forgetting"].values())))
     avg_i = float(np.mean(list(res["improvement"].values())))
     res["avg_forgetting"] = round(avg_f, 4)
     res["avg_improvement"] = round(avg_i, 4)
     res["comp_frac"] = comp_frac
     res["gate_k"] = gate_k
+    res["match_rate"] = match_rate if arm == "skip" else None  # 2026-09-27 errata
     res["seed"] = seed
     with open(os.path.join(logdir, f"cl_{arm}_{trunk}{suffix}_result.json"), "w") as f:
         json.dump(res, f, indent=1)

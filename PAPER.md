@@ -52,6 +52,20 @@ A five-part characterization of the trained k25 code (top-25% channels of the fi
 6. **Elite structure without elite identity**: channel win-rates are concentrated (Gini 0.50–0.58, rising with scale; the inversion point is the most concentrated), but cross-seed elite overlap is at chance (6.7% vs 6.5% expected).
 7. **Stability is the mechanism, not competition**: a four-arm selection control (top-k vs random-k vs fixed-k vs sigmoid-gate, all at 25% keep) shows three *stable*-subset mechanisms tie exactly (3.823–3.827) while random-k — the only one that re-draws the subset every step — loses by 0.24 nats. The benefit comes from a *stable channel subset structure* that downstream weights can adapt to; neither competition, input-dependence, nor dynamics are necessary. This also reframes the code-stability findings: they are largely a byproduct of subset constancy.
 
+   **Erratum (2026-09-27)**: the sigmoid arm above was broken. The gate was lazily
+   created inside `forward()` with zero bias — after optimizer construction, so its
+   7.09M parameters never trained, and with zero bias the mean keep rate sat at
+   ~0.50, not the nominal 0.25. The "sigmoid-gate" arm was in fact a *frozen random
+   projection at half keep*; its val (3.8226) landing inside the tie band was two
+   errors canceling. Repaired (gate created at construction with `bias=logit(k_frac)`,
+   plus an optimizer-membership guard in `main`), the arm — `sig25fix` — reaches
+   **val 3.7708** with keep self-calibrated to 0.2498 (drifting 0.298→0.250 over
+   12k steps): 0.05 nats below the entire tie band, best of the five arms.
+   Refined reading: the stable-subset story survives (random-k still loses by
+   0.33 nats), but *input-dependence is useless* is withdrawn pending two controls
+   this run does not satisfy — the gate adds 7.09M trainable parameters the other
+   arms lack (not param-matched), and this is a single seed.
+
 ### 3.6 Further negatives
 
 k-WTA probe on frozen Qwen3-0.6B features loses to a linear probe (0.570 vs 0.642) — the mechanism must be trained in. A single-window contamination detector built from four trace features (NLL, activation rate, max-NLL, bigram score) does not beat NLL alone (ensemble 0.517 vs 0.605); set-level detection (AUC 0.93) remains the only usable mode. Per-token activation rate carries no seen/unseen signal (OOD AUC 0.5005). Inference-time elasticity shows the trained model tolerates *reducing* k gracefully (+0.05 nats at 10%) but collapses when *increasing* it (k=100% is worse than chance) — weights co-adapt to exactly one sparsity.

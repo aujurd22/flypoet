@@ -75,8 +75,17 @@ class KWTA(nn.Module):
       'random'    keep a fresh random k-subset per forward (capacity control,
                   no competition)
       'fixed'     keep one fixed channel subset for ALL inputs (stable random
-                  subset, registered at init — static capacity, no dynamics)"""
-    def __init__(self, k_frac, impl="torch", e_frac=0.90, selector="magnitude"):
+                  subset, registered at init — static capacity, no dynamics)
+      'sigmoid'   learnable soft gate, mean keep calibrated to k_frac at init.
+
+    2026-09-27 errata-fix: the sigmoid gate used to be created lazily on the
+    first forward — i.e. AFTER the optimizer was built in train_v2.main, so its
+    parameters never entered the optimizer and stayed at random init for the
+    whole run (measured: probes keep=0.4997, bias exactly 0, weights at init
+    range; see README errata section). The gate is now created at construction
+    (requires d=) so the optimizer always sees it."""
+    def __init__(self, k_frac, impl="torch", e_frac=0.90, selector="magnitude",
+                 d=None):
         super().__init__()
         self.k_frac = k_frac
         self.impl = impl
@@ -85,6 +94,15 @@ class KWTA(nn.Module):
         self._cuda_fn = None
         self._fixed_mask = None
         self._gate = None
+        if selector == "sigmoid":
+            if d is None:
+                raise ValueError("selector='sigmoid' requires d= at construction "
+                                 "(see 2026-09-27 errata: lazy creation kept the "
+                                 "gate out of the optimizer)")
+            self._gate = nn.Linear(d, d)
+            # keep-rate setpoint: sigmoid(bias) = k_frac at init
+            with torch.no_grad():
+                self._gate.bias.fill_(math.log(k_frac / (1.0 - k_frac)))
         self.last_keep = None      # tensor: mean keep fraction, set in forward
 
     def forward(self, x):
@@ -116,11 +134,8 @@ class KWTA(nn.Module):
             thr = torch.kthvalue(noise, d - k + 1, dim=-1, keepdim=True).values
             return x * (noise >= thr)
         if self.selector == "sigmoid":
-            # soft selection (Gated Attention style): query-dependent sigmoid
-            # gate on the attention output, self-calibrated to ~k_frac mean rate
-            if self._gate is None:
-                self._gate = torch.nn.Linear(d, d).to(x.device)
-                torch.nn.init.zeros_(self._gate.bias)
+            # learnable soft gate (Gated Attention style), mean keep calibrated
+            # to k_frac at init; registered at construction -> optimizer sees it
             gate = torch.sigmoid(self._gate(x.detach()))
             self.last_keep = gate.mean().detach()
             return x * gate
@@ -152,7 +167,8 @@ class Block(nn.Module):
             self.kwta = KWTA(kwta_opts.get("k_frac", 0.10),
                              impl=kwta_opts.get("impl", "torch"),
                              e_frac=kwta_opts.get("e_frac", 0.90),
-                             selector=kwta_opts.get("selector", "magnitude"))
+                             selector=kwta_opts.get("selector", "magnitude"),
+                             d=d)
         else:
             self.kwta = None
         self.register_buffer("cos", cos, persistent=False)
@@ -266,6 +282,16 @@ def main():
           flush=True)
 
     opt = torch.optim.AdamW(model.parameters(), lr=6e-4, weight_decay=0.1, betas=(0.9, 0.95))
+    # regression guard (2026-09-27 errata): a sigmoid arm must have its gate
+    # parameters inside the optimizer from step 0
+    if kwta_opts and kwta_opts.get("selector") == "sigmoid":
+        gate_ids = {id(p) for n, p in model.named_parameters() if "_gate" in n}
+        opt_ids = {id(p) for g in opt.param_groups for p in g["params"]}
+        assert gate_ids and gate_ids <= opt_ids, \
+            "sigmoid gate not registered in the optimizer (errata regression)"
+        print(f"[guard] sigmoid gate params in optimizer: "
+              f"{sum(p.numel() for n, p in model.named_parameters() if '_gate' in n) / 1e6:.2f}M",
+              flush=True)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=6e-4,
                                                 total_steps=args.steps, pct_start=0.03)
     os.makedirs(os.path.join(ROOT, "logs_v2"), exist_ok=True)
