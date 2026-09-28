@@ -140,12 +140,12 @@ def add_hooks_capture_input(model):
             continue
         orig_fwd = b.kwta.forward
 
-        def mk(orig):
+        def mk(orig, blk):
             def fwd(x):
-                b.kwta.last_input = x.detach()
+                blk.kwta.last_input = x.detach()
                 return orig(x)
             return fwd
-        b.kwta.forward = mk(orig_fwd)
+        b.kwta.forward = mk(orig_fwd, b)
         b.kwta._capture = True
 
 
