@@ -1,0 +1,197 @@
+{
+ "experiment": "P-COMP-1",
+ "results": {
+  "flynetS_k25_24k": {
+   "baseline": 3.565990906953812,
+   "rows": [
+    {
+     "arm": "D",
+     "r": 0.25,
+     "val": 3.56599,
+     "delta": 0.0,
+     "note": "native dynamic k25 (baseline)",
+     "verdict": "LOSSLESS"
+    },
+    {
+     "arm": "D",
+     "r": 0.15,
+     "val": 3.58814,
+     "delta": 0.02215,
+     "verdict": "HALF-COST"
+    },
+    {
+     "arm": "D",
+     "r": 0.1,
+     "val": 3.61728,
+     "delta": 0.05129,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "D",
+     "r": 0.05,
+     "val": 3.92254,
+     "delta": 0.35655,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.25,
+     "val": 11.37477,
+     "delta": 7.80878,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.15,
+     "val": 10.01862,
+     "delta": 6.45263,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.1,
+     "val": 6.60334,
+     "delta": 3.03735,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.05,
+     "val": 6.43088,
+     "delta": 2.86489,
+     "verdict": "DEGRADED"
+    }
+   ],
+   "storage_bound_r10": 0.06876528573441995,
+   "lossless_point": null
+  },
+  "flynetS_k25": {
+   "baseline": 3.7626215487718584,
+   "rows": [
+    {
+     "arm": "D",
+     "r": 0.25,
+     "val": 3.76262,
+     "delta": 0.0,
+     "note": "native dynamic k25 (baseline)",
+     "verdict": "LOSSLESS"
+    },
+    {
+     "arm": "D",
+     "r": 0.15,
+     "val": 3.7746,
+     "delta": 0.01197,
+     "verdict": "HALF-COST"
+    },
+    {
+     "arm": "D",
+     "r": 0.1,
+     "val": 3.80248,
+     "delta": 0.03986,
+     "verdict": "HALF-COST"
+    },
+    {
+     "arm": "D",
+     "r": 0.05,
+     "val": 4.06347,
+     "delta": 0.30085,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.25,
+     "val": 8.90319,
+     "delta": 5.14057,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.15,
+     "val": 7.42393,
+     "delta": 3.66131,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.1,
+     "val": 6.35673,
+     "delta": 2.59411,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.05,
+     "val": 6.35054,
+     "delta": 2.58792,
+     "verdict": "DEGRADED"
+    }
+   ],
+   "storage_bound_r10": 0.06876528573441995,
+   "lossless_point": null
+  },
+  "flynetS_k25_s8": {
+   "baseline": 3.7833929445594547,
+   "rows": [
+    {
+     "arm": "D",
+     "r": 0.25,
+     "val": 3.78339,
+     "delta": 0.0,
+     "note": "native dynamic k25 (baseline)",
+     "verdict": "LOSSLESS"
+    },
+    {
+     "arm": "D",
+     "r": 0.15,
+     "val": 3.79422,
+     "delta": 0.01083,
+     "verdict": "HALF-COST"
+    },
+    {
+     "arm": "D",
+     "r": 0.1,
+     "val": 3.82309,
+     "delta": 0.0397,
+     "verdict": "HALF-COST"
+    },
+    {
+     "arm": "D",
+     "r": 0.05,
+     "val": 4.04943,
+     "delta": 0.26603,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.25,
+     "val": 7.90949,
+     "delta": 4.1261,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.15,
+     "val": 8.96539,
+     "delta": 5.18199,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.1,
+     "val": 7.99468,
+     "delta": 4.21129,
+     "verdict": "DEGRADED"
+    },
+    {
+     "arm": "S",
+     "r": 0.05,
+     "val": 6.33631,
+     "delta": 2.55292,
+     "verdict": "DEGRADED"
+    }
+   ],
+   "storage_bound_r10": 0.06876528573441995,
+   "lossless_point": null
+  }
+ }
+}
