@@ -359,3 +359,51 @@ FlyPoet 的规模阶梯（五规模 × 匹配对 × 剂量曲线）在这个方�
 | fru_low | 1,989 | fruitless 低表达 |
 | dsx_high | 138 | doublesex 高表达（性别分化） |
 | coexpress_high | 193 | fru+dsx 共表达 |
+
+## 块 10 追加：WTA×幻觉——**确认空白（发表机会）**
+
+**关键结论**：2025-26 的 attention sink → hallucination 文献高度活跃
+（SinkProbe ICLR 2026、SinkTrack ICLR 2026、MIT Han Lab 2025、EMNLP 2025），
+但 **没有任何论文将 trained-in WTA 稀疏激活与幻觉率关联**。
+最接近的是 Prototype Transformer（测量原型间的 WTA 行为，但非幻觉用途）。
+
+**研究空白的精确表述**：
+> 已知：① sparse attention sink 易幻觉（EMNLP 2025）；② dense sink 头不易幻觉
+> （arXiv 2411.09968）；③ attention ≈ SDM（Bricken NeurIPS 2021）。
+> 未测：**训练时强加通道 WTA（flypoet k25）是否改变 sink 模式→幻觉率？**
+> 如果 k25 的稳定稀疏子集减少幻觉（因为码因果承载、不是随机噪声通道），
+> 这就是 "trained-in WTA reduces hallucination" 的第一个证据——
+> 同时连接 attention sink 文献 + WTA 文献 + flypoet 码分析三条线。
+
+**可行性**：需要一个能测幻觉的任务（不是 char-level 文学语料——太底层）。
+最现实路径：在 flymemory 的真实 QA 数据上，用 k25 模型 vs dense 模型做
+answer correctness + faithfulness 对比（幻觉率 proxy）。
+成本：两个模型都已训练好，只需评估协议。
+
+## 综合预写（02:3x——正式版 5:00 锁定）
+
+### 三个发现合并成一个新的研究主张
+
+我们项目的三个核心实证结果，单独看都是中等强度的发现：
+1. U 形甜点（25% 优于 dense 0.08 nats，跨 3 seed 4 规模）
+2. 稳定子集=活性成分（fixed=sigmoid=top-k，random 崩 0.24）
+3. 码=主题地址（2.6× chance，与 cosine 打平）
+
+但合并后产生一个**更强的新假说**：
+
+> **k-WTA 的真正功能不是"让模型更好"，而是"让模型学会一个固定的通道分工结构"——
+> 这个结构一旦建立，下游权重就能将通道与功能绑定；
+> 绑定一旦建立，就不能再变（推理窄峰）；通道越稳定、模型越大、绑定越深。**
+
+这个假说的独特预测：
+- ① fixed-k = top-k（通道选择规则不影响绑定质量）→ ✅ 已验证
+- ② random-k 崩（每步换绑 = 永远建立不了绑定）→ ✅ 已验证
+- ③ 推理偏离训练 k 崩（绑定不可移）→ ✅ 已验证
+- ④ 更大模型优势更大（更多通道→更细分工）→ ✅ 初步验证（478M +0.180 最大）
+- ⑤ 码不语义（绑定是功能性的，不是内容性的）→ ✅ 已验证（PMI 0.03）
+- ⑥ 未测：**幻觉率**（如果码=功能绑定而非语义，则模型"知道"怎么算但"不知道"对不对
+  ——预测 k25 模型幻觉率与 dense 相当或更低，因为功能绑定更稳定）
+
+⑥ 是唯一未验证的预测，也是连接 attention sink→幻觉文献的桥梁。
+如果能证明"trained-in WTA 的功能绑定结构减少幻觉"，
+这就是 **flypoet 从"稀疏有没有用"跳到"稀疏在做什么"的关键跳板**。
