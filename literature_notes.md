@@ -407,3 +407,34 @@ answer correctness + faithfulness 对比（幻觉率 proxy）。
 ⑥ 是唯一未验证的预测，也是连接 attention sink→幻觉文献的桥梁。
 如果能证明"trained-in WTA 的功能绑定结构减少幻觉"，
 这就是 **flypoet 从"稀疏有没有用"跳到"稀疏在做什么"的关键跳板**。
+
+## 块 11 追加：MoE 路由稳定性 + Hopfield/Transformer 等价理论（02:4x-03:0x 检索）
+
+### MoE 路由稳定性——与四轴裁决的深层同构
+
+- [Stabilizing MoE RL by Aligning Training-Inference (2025)](https://arxiv.org/html/2510.11370v2)：发现 MoE 的 **train/inference 路由行为不一致**——与我们的推理窄峰完全同构
+- [Advancing Expert Specialization (NeurIPS 2025)](https://neurips.cc/virtual/2025/poster/116506)：专家特化 vs 路由均匀性的理论冲突——与我们的 fixed-k（均匀但稳定）vs top-k（选择但动态）同构
+- [Stable-MoE](https://www.emergentmind.com/topics/stable-moe)：稳定稀疏 MoE 的 routing/training/inference 三阶段
+
+→ 我们的 random-k 失败 = MoE 的 expert collapse：**"富者愈富"动力学**——一旦下游权重适配了某个通道子集，换子集就是灾难。这在 MoE 和 k-WTA 中是同一现象。
+
+### Hopfield/Transformer 等价——理论框架已成熟
+
+- **核心等价（Ramsauer et al., ICLR 2020）**：attention = one-step update of modern Hopfield network，指数存储容量
+- **[Provably Optimal Memory Capacity (2024-25)](https://openreview.net)**：kernelized modern Hopfield 证明最优容量
+- **[Energy Transformer (NeurIPS 2023)](https://neurips.cc/virtual/2023/poster/71901)**：统一 attention + energy-based models + associative memory
+- **[Associative Transformer (arXiv 2309.12862)](https://arxiv.org/html/2309.12862v4)**：pairwise attention 构建 Hopfield 型关联吸引子
+- **[Linear Attention as Iterated Hopfield (Millidge 2024)](https://www.beren.io/2024-03-03-Linear-Attention-as-Iterated-Hopfield-Networks/)**：扩展到线性注意力
+- **[Hidden States of MHN in Transformers (NeurIPS 2025)](https://arxiv.org/html/2511.20698v1)**：现代 Hopfield attention 继承层间 attention scores
+
+→ **k-WTA 的理论定位在这个谱系中**：attention = 软 Hopfield 更新，k-WTA = **硬化**（二值化 top-k）。
+  我们的四臂裁决新增的知识：**硬化的收益不来自"更精确的选择"，而来自"子集稳定"**。
+  这在 Hopfield 框架中的对应：**能量面的吸引子结构不需要竞争动力学——只需固定 Basin 边界**。
+
+### 综合：FlyPoet 在三个理论框架中的定位
+
+| 理论框架 | FlyPoet 对应物 | 增量 |
+|---|---|---|
+| SDM (Kanerva 1988) | k25 码 = 二值硬地址 | 训练涌现 vs 代数构造 |
+| Modern Hopfield (Ramsauer 2020) | k-WTA = 硬化的 one-step update | 子集稳定性 ≫ 选择精度 |
+| MoE routing | fixed-k = 稳定专家分配 | "富者愈富"的积极面：专家需要稳定 |
