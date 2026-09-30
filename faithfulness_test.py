@@ -1,13 +1,16 @@
-"""Faithfulness test: does trained-in stable binding produce more grounded output?
+"""Distributional divergence test: does trained-in stable binding produce a
+self-consistent generation distribution that diverges from dense?
 
-Simple test: sample 200 continuations from the same 200 seed contexts using
-k25-24k and dense-24k (same temperature). Score each generation:
-  1. NLL under the model itself (self-confidence in own output)
-  2. distinct-3 (diversity — rules out mode collapse)
-  3. NLL under the OTHER model (cross-model agreement)
+Sample 200 continuations from the same 200 seed contexts using k25-24k and
+dense-24k (same temperature). Score:
+  1. ref_nll: NLL under the dense reference model
+  2. self_nll: NLL under the generating model itself
+  3. distinct-3 (diversity — rules out mode collapse)
+  4. per-window NLL distribution (std, not just mean)
 
-Prediction (stable binding): k25 generations should have lower self-NLL
-and/or lower cross-model NLL than dense, without diversity collapse.
+NOTE: these measure *distributional divergence*, NOT faithfulness.
+High cross-NLL means k25 output is foreign to dense — not that it is
+better grounded. Interpretation is about distributional identity.
 """
 import json, os, sys
 import numpy as np
@@ -46,23 +49,10 @@ def sample(model, corpus, starts, n_new=GEN, temp=TEMP):
 
 @torch.no_grad()
 def batch_nll(model, corpus, windows):
-    """Per-window NLL."""
+    """Per-window NLL (true per-window, not batch-mean copy)."""
     out = []
     for i in range(0, len(windows), 50):
         xb = torch.stack([torch.from_numpy(np.copy(w)) for w in windows[i:i + 50]]).to(DEV)
-        yb = xb.clone()
-        with torch.autocast("cuda", dtype=torch.bfloat16):
-            _, l = model(xb[:, :-1], yb[:, 1:])
-        out.extend([l.item()] * xb.shape[0])
-    return np.array(out)
-
-
-@torch.no_grad()
-def batch_nll(model, corpus, windows):
-    """Mean NLL for each window."""
-    out = []
-    for i in range(0, len(windows), 50):
-        xb = torch.stack([torch.from_numpy(np.copy(w)) for w in windows[i:i+50]]).to(DEV)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             _, l = model(xb[:, :-1].contiguous(), xb[:, 1:].contiguous())
         out.extend([l.item()] * xb.shape[0])
