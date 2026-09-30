@@ -49,13 +49,21 @@ def sample(model, corpus, starts, n_new=GEN, temp=TEMP):
 
 @torch.no_grad()
 def batch_nll(model, corpus, windows):
-    """Per-window NLL (true per-window, not batch-mean copy)."""
+    """True per-window NLL. Each window gets its own loss value."""
     out = []
     for i in range(0, len(windows), 50):
-        xb = torch.stack([torch.from_numpy(np.copy(w)) for w in windows[i:i + 50]]).to(DEV)
+        chunk = windows[i:i + 50]
+        xb = torch.stack([torch.from_numpy(np.copy(w[:-1])) for w in chunk]).to(DEV)
+        yb = torch.stack([torch.from_numpy(np.copy(w[1:])) for w in chunk]).to(DEV)
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            _, l = model(xb[:, :-1].contiguous(), xb[:, 1:].contiguous())
-        out.extend([l.item()] * xb.shape[0])
+            logits, _ = model(xb, yb)
+        # per-token CE → per-window mean
+        ce = F.cross_entropy(
+            logits.float().reshape(-1, logits.size(-1)),
+            yb.reshape(-1), reduction="none"
+        )
+        ce = ce.view(xb.shape[0], -1)   # (B, T)
+        out.extend(ce.mean(dim=1).cpu().numpy())  # (B,) per-window mean
     return np.array(out)
 
 
